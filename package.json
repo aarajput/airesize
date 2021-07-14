@@ -2,8 +2,16 @@
   "name": "airesize",
   "version": "2.0.0",
   "description": "Its helps to create multisize images for android and ios",
-  "main": "index.js",
+  "author": "wisecrab",
+  "license": "ISC",
+  "preferGlobal": true,
+  "main": "dist/index.js",
+  "types": "index.d.ts",
+  "bin": {
+    "airesize": "./dist/index.js"
+  },
   "scripts": {
+    "prepublish": "tsc",
     "start": "node dist/index.js"
   },
   "keywords": [
@@ -21,12 +29,6 @@
     "2x",
     "3x"
   ],
-  "author": "wisecrab",
-  "license": "ISC",
-  "bin": {
-    "airesize": "./dist/index.js"
-  },
-  "preferGlobal": true,
   "dependencies": {
     "change-case": "^4.1.2",
     "colors": "1.4.0",

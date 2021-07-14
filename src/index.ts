@@ -3,8 +3,10 @@ import * as prompt from 'prompt';
 import * as InputValidator from './validators/input.validator';
 import * as AndroidImageResizer from './service/android-image.service';
 import * as IOSImageResizer from './service/ios-image.service';
-import { InputSize } from './enums/input-size';
+import * as ImageService from './service/image.service';
 import * as yargs from 'yargs';
+import * as path from 'path';
+import { InputSize } from './enums/input-size';
 import { hideBin } from 'yargs/helpers';
 
 const start = async () => {
@@ -56,11 +58,12 @@ const start = async () => {
             imagePath,
         });
     }
-
+    const outputDir = path.dirname(path.resolve(imagePath));
+    return `All image resized successfully. You can find them in ${path.join(outputDir, ImageService.getImageNameWithoutExtension(imagePath))}`;
 };
 
-start().then(() => {
-    Logger.success('All image resized successfully');
+start().then((message) => {
+    Logger.success(message);
 })
     .catch((error) => {
         Logger.error(error.toString());
