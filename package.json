@@ -1,12 +1,13 @@
 {
   "name": "airesize",
-  "version": "1.0.0",
-  "description": "Its helps to create multisize images for android",
-  "main": "app.js",
+  "version": "2.0.0",
+  "description": "Its helps to create multisize images for android and ios",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node dist/index.js"
   },
   "keywords": [
+    "airesize",
     "android",
     "asset",
     "resize",
@@ -15,18 +16,28 @@
     "xhdpi",
     "xxhdpi",
     "xxxhdpi",
-    "airesize"
+    "ios",
+    "1x",
+    "2x",
+    "3x"
   ],
   "author": "wisecrab",
   "license": "ISC",
-  "dependencies": {
-    "colors": "^1.1.2",
-    "jimp": "^0.2.28",
-    "optimist": "^0.6.1",
-    "promise": "^8.0.1"
-  },
   "bin": {
-    "airesize": "./bin/ai-resize.js"
+    "airesize": "./dist/index.js"
   },
-  "preferGlobal": true
+  "preferGlobal": true,
+  "dependencies": {
+    "colors": "1.4.0",
+    "jimp": "0.16.1",
+    "minimist": "1.2.5",
+    "prompt": "1.1.0"
+  },
+  "devDependencies": {
+    "@types/minimist": "1.2.2",
+    "@types/node": "16.3.2",
+    "@types/prompt": "1.1.1",
+    "tslint": "^6.1.3",
+    "typescript": "4.3.5"
+  }
 }
