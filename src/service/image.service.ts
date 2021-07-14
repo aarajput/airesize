@@ -15,3 +15,7 @@ export const getImageNameWithExtension = (filePath: string) => {
 export const getImageNameWithoutExtension = (filePath: string) => {
     return path.basename(filePath, path.extname(filePath));
 };
+
+export const getImageExtension = (filePath: string) => {
+    return path.extname(filePath);
+};
