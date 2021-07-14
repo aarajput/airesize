@@ -39,7 +39,9 @@ const resizeImageForSpecificScreenType = async (input: {
     const image = await jimp.read(input.imagePath);
     const nWidth = input.width === InputSize.auto ? jimp.AUTO : parseFloat(input.width) * getFactorForScreenType(input.screenType);
     const nHeight = input.height === InputSize.auto ? jimp.AUTO : parseFloat(input.height) * getFactorForScreenType(input.screenType);
-    Logger.info(`Resizing ${input.screenType}`);
+
+    Logger.info(`resizing image for screen type ${input.screenType} <${nWidth === -1 ? 'auto' : nWidth}X${nHeight === -1 ? 'auto' : nHeight}>`);
+
     await image.resize(nWidth, nHeight).writeAsync(`${path.join(dirPath, imageNameWithExt)}`);
 };
 
@@ -54,6 +56,6 @@ const getFactorForScreenType = (screenType: AndroidScreenType): number => {
         case AndroidScreenType.xxhdpi:
             return 3;
         case AndroidScreenType.xxxhdpi:
-            return 34;
+            return 4;
     }
 };

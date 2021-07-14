@@ -13,6 +13,7 @@ const start = async () => {
             properties: {
                 width: {
                     description: `Width: {${InputSize.auto} | number}`,
+                    default: 'auto',
                 },
             },
         },
@@ -20,6 +21,7 @@ const start = async () => {
             properties: {
                 height: {
                     description: `Height: {${InputSize.auto} | number}`,
+                    default: 'auto',
                 },
             },
         },
