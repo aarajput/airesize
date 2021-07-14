@@ -25,6 +25,9 @@ export const validateSize = (fieldName: string, input: string) => {
     if (isNaN(num)) {
         throw Error(`Only ${InputSize.auto} | number is allowed for ${fieldName}`);
     }
+    if (num < 2) {
+        throw Error(`${fieldName} should be greater than 1`);
+    }
 };
 
 export const validateWidthAndHeight = (width: string, height: string) => {

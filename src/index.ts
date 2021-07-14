@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import * as Logger from './utils/logger';
 import * as prompt from 'prompt';
 import * as InputValidator from './validators/input.validator';
@@ -6,6 +8,7 @@ import * as IOSImageResizer from './service/ios-image.service';
 import * as ImageService from './service/image.service';
 import * as yargs from 'yargs';
 import * as path from 'path';
+import * as _ from 'lodash';
 import { InputSize } from './enums/input-size';
 import { hideBin } from 'yargs/helpers';
 
@@ -13,10 +16,14 @@ const start = async () => {
     const argv = await yargs(hideBin(process.argv)).option('version', {
         alias: 'v'
     }).option('android', {
-        alias: 'a'
+        alias: 'a',
+        boolean: true,
+    }).option('ios', {
+        alias: 'i',
+        boolean: true,
     })
         .argv;
-    const imagePath = process.argv[2];
+    const imagePath = _.head<any>(argv._);
     InputValidator.validateImagePath(imagePath);
 
     const size = await prompt.get([
