@@ -6,6 +6,7 @@ import * as changeCase from 'change-case';
 import * as jimp from 'jimp';
 import { InputSize } from '../enums/input-size';
 import * as Logger from '../utils/logger';
+import { appIconContents } from '../others/ios-app-icon-contents';
 
 export const resizeImage = async (input: {
     imagePath: string,
@@ -44,6 +45,26 @@ const resizeImageForSpecificScreenType = async (input: {
     await image.resize(nWidth, nHeight).writeAsync(`${path.join(input.outputDir, newFileName)}`);
 };
 
+export const generateAppIcons = async (input: {
+    imagePath: string,
+    outputDir: string,
+}): Promise<void> => {
+    if (!fs.existsSync(input.outputDir)) {
+        fs.mkdirSync(input.outputDir, {
+            recursive: true,
+        });
+    }
+    const promises = appIconContents.images.map(async (ic) => {
+        const scale = +ic.scale.replace('x', '');
+        const nSize = ic.size.split('x');
+        const image = await jimp.read(input.imagePath);
+        Logger.info(`Resizing ios app icon for ${ic.filename}`);
+        await image.resize(+nSize[0] * scale, +nSize[1] * scale)
+            .writeAsync(path.join(input.outputDir, ic.filename));
+    });
+    await Promise.all(promises);
+    fs.writeFileSync(path.join(input.outputDir, 'Contents.json'), JSON.stringify(appIconContents));
+};
 
 const getFactorForScreenType = (screenType: IOSScreenType): number => {
     switch (screenType) {

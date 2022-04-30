@@ -40,23 +40,17 @@ export const generateIOSImages = (input: {
     });
 };
 
-const start = async () => {
-    const argv = await yargs(hideBin(process.argv))
-        .option('help', {
-            alias: 'h'
-        }).option('version', {
-            alias: 'v'
-        }).option('android', {
-            alias: 'a',
-            boolean: true,
-        }).option('ios', {
-            alias: 'i',
-            boolean: true,
-        })
-        .argv;
-    const imagePath = _.head<any>(argv._);
-    InputValidator.validateImagePath(imagePath);
+export const generateIOSAppIcons = (input: {
+    imagePath: string,
+    outputDir: string,
+}): Promise<void> => {
+    return IOSImageResizer.generateAppIcons(input);
+};
 
+const getSizeFromUser = async (): Promise<{
+    width: string;
+    height: string;
+}> => {
     const size = await prompt.get([
         {
             properties: {
@@ -80,10 +74,37 @@ const start = async () => {
     InputValidator.validateSize('Width', width as string);
     InputValidator.validateSize('Height', height as string);
     InputValidator.validateWidthAndHeight(width, height);
+    return {
+        width,
+        height,
+    };
+}
+const start = async () => {
+    const argv = await yargs(hideBin(process.argv))
+        .option('help', {
+            alias: 'h'
+        }).option('android', {
+            alias: 'a',
+            boolean: true,
+        }).option('ios', {
+            alias: 'i',
+            boolean: true,
+        }).option('ios-icon', {
+            alias: 'ii',
+            boolean: true,
+        })
+        .argv;
+    const imagePath = _.head<any>(argv._);
+    InputValidator.validateImagePath(imagePath);
+
     const imageDir = path.dirname(path.resolve(imagePath));
     const imageNameNoExt = ImageService.getImageNameWithoutExtension(imagePath);
 
-    if (argv.android || (!argv.android && !argv.ios)) {
+    if (argv.android) {
+        const {
+            width,
+            height,
+        } = await getSizeFromUser();
         await AndroidImageResizer.resizeImage({
             width,
             height,
@@ -92,7 +113,11 @@ const start = async () => {
         });
     }
 
-    if (argv.ios || (!argv.android && !argv.ios)) {
+    if (argv.ios) {
+        const {
+            width,
+            height,
+        } = await getSizeFromUser();
         await IOSImageResizer.resizeImage({
             width,
             height,
@@ -100,8 +125,15 @@ const start = async () => {
             outputDir: path.join(imageDir, imageNameNoExt, 'ios'),
         });
     }
-    return `All image resized successfully. You can find them in ${path.join(imageDir, imageNameNoExt)}`;
+    if (argv['ios-icon']) {
+        await IOSImageResizer.generateAppIcons({
+            imagePath,
+            outputDir: path.join(imageDir, imageNameNoExt, 'AppIcon.appiconset'),
+        });
+    }
+    return `All images resized successfully. You can find them in ${path.join(imageDir, imageNameNoExt)}`;
 };
+
 
 start().then((message) => {
     Logger.success(message);
