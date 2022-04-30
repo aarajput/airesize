@@ -11,22 +11,12 @@ export const resizeImage = async (input: {
     imagePath: string,
     width: string,
     height: string,
+    outputDir: string,
 }) => {
-    const baseDir = ImageService.getImageNameWithoutExtension(input.imagePath);
-    if (!fs.existsSync(baseDir)) {
-        fs.mkdirSync(baseDir);
-    }
-    const subBaseDir = path.join(baseDir, 'ios');
-    if (!fs.existsSync(subBaseDir)) {
-        fs.mkdirSync(subBaseDir);
-    }
-    const promises: Promise<any>[] = [];
-    XIOSScreenType.values.forEach((screenType) => {
-        promises.push(resizeImageForSpecificScreenType({
-            ...input,
-            screenType,
-        }));
-    });
+    const promises: Promise<void>[] = XIOSScreenType.values.map((screenType) => resizeImageForSpecificScreenType({
+        ...input,
+        screenType,
+    }));
     await Promise.all(promises);
 };
 
@@ -35,13 +25,15 @@ const resizeImageForSpecificScreenType = async (input: {
     width: string,
     height: string,
     screenType: IOSScreenType,
+    outputDir: string,
 }) => {
     const imageNameWithoutExt = ImageService.getImageNameWithoutExtension(input.imagePath);
     const newImageName = changeCase.pascalCase(imageNameWithoutExt);
     const newFileName = `${newImageName}${input.screenType}${ImageService.getImageExtension(input.imagePath)}`;
-    const dirPath = path.join(ImageService.getImageNameWithoutExtension(input.imagePath), 'ios');
-    if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath);
+    if (!fs.existsSync(input.outputDir)) {
+        fs.mkdirSync(input.outputDir, {
+            recursive: true,
+        });
     }
     const image = await jimp.read(input.imagePath);
     const nWidth = input.width === InputSize.auto ? jimp.AUTO : parseFloat(input.width) * getFactorForScreenType(input.screenType);
@@ -49,7 +41,7 @@ const resizeImageForSpecificScreenType = async (input: {
 
     Logger.info(`Resizing ios image for screen type ${input.screenType} <${nWidth === -1 ? 'auto' : nWidth}X${nHeight === -1 ? 'auto' : nHeight}>`);
 
-    await image.resize(nWidth, nHeight).writeAsync(`${path.join(dirPath, newFileName)}`);
+    await image.resize(nWidth, nHeight).writeAsync(`${path.join(input.outputDir, newFileName)}`);
 };
 
 

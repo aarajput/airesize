@@ -11,27 +11,19 @@ export const resizeImage = async (input: {
     imagePath: string,
     width: string,
     height: string,
+    outputDir: string,
 }) => {
-    const baseDir = ImageService.getImageNameWithoutExtension(input.imagePath);
-    if (!fs.existsSync(baseDir)) {
-        fs.mkdirSync(baseDir);
-    }
-    const subBaseDir = path.join(baseDir, 'android');
-    if (!fs.existsSync(subBaseDir)) {
-        fs.mkdirSync(subBaseDir);
-    }
-    const promises: Promise<any>[] = [];
-    XAndroidScreenType.values.forEach((screenType) => {
-        promises.push(resizeImageForSpecificScreenType({
+    const promises: Promise<any>[] = XAndroidScreenType.values.map((screenType) =>
+        resizeImageForSpecificScreenType({
             ...input,
             screenType,
         }));
-    });
     await Promise.all(promises);
 };
 
 const resizeImageForSpecificScreenType = async (input: {
     imagePath: string,
+    outputDir: string,
     width: string,
     height: string,
     screenType: AndroidScreenType,
@@ -40,9 +32,11 @@ const resizeImageForSpecificScreenType = async (input: {
     const newImageName = changeCase.snakeCase(imageNameWithoutExt);
     const newFileName = `${newImageName}${ImageService.getImageExtension(input.imagePath)}`;
 
-    const dirPath = path.join(ImageService.getImageNameWithoutExtension(input.imagePath), 'android', `drawable-${input.screenType}`);
+    const dirPath = path.join(input.outputDir, `drawable-${input.screenType}`);
     if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath);
+        fs.mkdirSync(dirPath, {
+            recursive: true,
+        });
     }
     const image = await jimp.read(input.imagePath);
     const nWidth = input.width === InputSize.auto ? jimp.AUTO : parseFloat(input.width) * getFactorForScreenType(input.screenType);

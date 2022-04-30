@@ -12,16 +12,47 @@ import * as _ from 'lodash';
 import { InputSize } from './enums/input-size';
 import { hideBin } from 'yargs/helpers';
 
+export const generateAndroidImages = (input: {
+    width: number | 'auto',
+    height: number | 'auto',
+    imagePath: string,
+    outputDir: string,
+}): Promise<void> => {
+    return AndroidImageResizer.resizeImage({
+        width: `${input.width}`,
+        height: `${input.height}`,
+        imagePath: input.imagePath,
+        outputDir: input.outputDir,
+    });
+};
+
+export const generateIOSImages = (input: {
+    width: number | 'auto',
+    height: number | 'auto',
+    imagePath: string,
+    outputDir: string,
+}): Promise<void> => {
+    return IOSImageResizer.resizeImage({
+        width: `${input.width}`,
+        height: `${input.height}`,
+        imagePath: input.imagePath,
+        outputDir: input.outputDir,
+    });
+};
+
 const start = async () => {
-    const argv = await yargs(hideBin(process.argv)).option('version', {
-        alias: 'v'
-    }).option('android', {
-        alias: 'a',
-        boolean: true,
-    }).option('ios', {
-        alias: 'i',
-        boolean: true,
-    })
+    const argv = await yargs(hideBin(process.argv))
+        .option('help', {
+            alias: 'h'
+        }).option('version', {
+            alias: 'v'
+        }).option('android', {
+            alias: 'a',
+            boolean: true,
+        }).option('ios', {
+            alias: 'i',
+            boolean: true,
+        })
         .argv;
     const imagePath = _.head<any>(argv._);
     InputValidator.validateImagePath(imagePath);
@@ -49,12 +80,15 @@ const start = async () => {
     InputValidator.validateSize('Width', width as string);
     InputValidator.validateSize('Height', height as string);
     InputValidator.validateWidthAndHeight(width, height);
+    const imageDir = path.dirname(path.resolve(imagePath));
+    const imageNameNoExt = ImageService.getImageNameWithoutExtension(imagePath);
 
     if (argv.android || (!argv.android && !argv.ios)) {
         await AndroidImageResizer.resizeImage({
             width,
             height,
             imagePath,
+            outputDir: path.join(imageDir, imageNameNoExt, 'android'),
         });
     }
 
@@ -63,10 +97,10 @@ const start = async () => {
             width,
             height,
             imagePath,
+            outputDir: path.join(imageDir, imageNameNoExt, 'ios'),
         });
     }
-    const outputDir = path.dirname(path.resolve(imagePath));
-    return `All image resized successfully. You can find them in ${path.join(outputDir, ImageService.getImageNameWithoutExtension(imagePath))}`;
+    return `All image resized successfully. You can find them in ${path.join(imageDir, imageNameNoExt)}`;
 };
 
 start().then((message) => {

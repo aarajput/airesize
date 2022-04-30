@@ -6,7 +6,7 @@
   "license": "ISC",
   "preferGlobal": true,
   "main": "dist/index.js",
-  "types": "index.d.ts",
+  "types": "dist/index.d.ts",
   "bin": {
     "airesize": "./dist/index.js"
   },
