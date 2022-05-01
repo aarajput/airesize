@@ -1,6 +1,6 @@
 {
   "name": "airesize",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Its helps to create multisize images and app icons for android and ios",
   "author": "wisecrab",
   "license": "ISC",
@@ -12,7 +12,8 @@
   },
   "scripts": {
     "compile": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "deploy": "npm publish"
   },
   "keywords": [
     "airesize",
