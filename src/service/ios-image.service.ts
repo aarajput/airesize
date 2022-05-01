@@ -7,6 +7,8 @@ import * as jimp from 'jimp';
 import { InputSize } from '../enums/input-size';
 import * as Logger from '../utils/logger';
 import { appIconContents } from '../others/ios-app-icon-contents';
+import * as _ from 'lodash';
+import { iosImageContents } from '../others/ios-image-contents';
 
 export const resizeImage = async (input: {
     imagePath: string,
@@ -14,11 +16,19 @@ export const resizeImage = async (input: {
     height: string,
     outputDir: string,
 }) => {
+    const imageNameWithoutExt = ImageService.getImageNameWithoutExtension(input.imagePath);
+    const newImageName = changeCase.pascalCase(imageNameWithoutExt);
     const promises: Promise<void>[] = XIOSScreenType.values.map((screenType) => resizeImageForSpecificScreenType({
         ...input,
         screenType,
+        imageNameWithoutExtension: newImageName,
     }));
     await Promise.all(promises);
+    const newContent = _.cloneDeep(iosImageContents);
+    newContent.images.forEach((img) => {
+        img.filename.replace('[IMAGE_NAME]', newImageName);
+    });
+    fs.writeFileSync(path.join(input.outputDir, 'Contents.json'), JSON.stringify(newContent));
 };
 
 const resizeImageForSpecificScreenType = async (input: {
@@ -27,10 +37,9 @@ const resizeImageForSpecificScreenType = async (input: {
     height: string,
     screenType: IOSScreenType,
     outputDir: string,
+    imageNameWithoutExtension: string,
 }) => {
-    const imageNameWithoutExt = ImageService.getImageNameWithoutExtension(input.imagePath);
-    const newImageName = changeCase.pascalCase(imageNameWithoutExt);
-    const newFileName = `${newImageName}${input.screenType}${ImageService.getImageExtension(input.imagePath)}`;
+    const newFileName = `${input.imageNameWithoutExtension}${input.screenType}${ImageService.getImageExtension(input.imagePath)}`;
     if (!fs.existsSync(input.outputDir)) {
         fs.mkdirSync(input.outputDir, {
             recursive: true,
@@ -56,7 +65,7 @@ export const generateAppIcons = async (input: {
     }
     const promises = appIconContents.images.map(async (ic) => {
         const scale = +ic.scale.replace('x', '');
-        const nSize = ic.size.split('x');
+        const nSize = ic.size!.split('x');
         const image = await jimp.read(input.imagePath);
         Logger.info(`Resizing ios app icon for ${ic.filename}`);
         await image.resize(+nSize[0] * scale, +nSize[1] * scale)
