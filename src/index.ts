@@ -12,6 +12,14 @@ import * as _ from 'lodash';
 import { InputSize } from './enums/input-size';
 import { hideBin } from 'yargs/helpers';
 
+export const enableLog = () => {
+    Logger.enableLog();
+};
+
+export const disableLog = () => {
+    Logger.disableLog();
+};
+
 export const generateAndroidImages = (input: {
     width: number | 'auto',
     height: number | 'auto',
@@ -51,6 +59,7 @@ const getSizeFromUser = async (): Promise<{
     width: string;
     height: string;
 }> => {
+    Logger.enableLog();
     const size = await prompt.get([
         {
             properties: {
@@ -79,7 +88,8 @@ const getSizeFromUser = async (): Promise<{
         height,
     };
 }
-const start = async () => {
+const run = async () => {
+
     const argv = await yargs(hideBin(process.argv))
         .option('help', {
             alias: 'h'
@@ -94,6 +104,9 @@ const start = async () => {
             boolean: true,
         })
         .argv;
+    if (!argv.android && !argv.ios && !argv['ios-icon']) {
+        throw new Error('Pass alteast one flat --android, --ios or/and -- ios-icon');
+    }
     const imagePath = _.head<any>(argv._);
     InputValidator.validateImagePath(imagePath);
 
@@ -134,10 +147,11 @@ const start = async () => {
     return `All images resized successfully. You can find them in ${path.join(imageDir, imageNameNoExt)}`;
 };
 
-
-start().then((message) => {
-    Logger.success(message);
-})
-    .catch((error) => {
-        Logger.error(error.toString());
-    });
+if (require.main === module) {
+    run().then((message) => {
+        Logger.success(message);
+    })
+        .catch((error) => {
+            Logger.error(error.toString());
+        });
+}
