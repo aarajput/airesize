@@ -26,9 +26,9 @@ export const resizeImage = async (input: {
     await Promise.all(promises);
     const newContent = _.cloneDeep(iosImageContents);
     newContent.images.forEach((img) => {
-        img.filename.replace('[IMAGE_NAME]', newImageName);
+        img.filename = img.filename.replace('[IMAGE_NAME]', newImageName);
     });
-    fs.writeFileSync(path.join(input.outputDir, 'Contents.json'), JSON.stringify(newContent));
+    fs.writeFileSync(path.join(input.outputDir, 'Contents.json'), JSON.stringify(newContent, null, 2));
 };
 
 const resizeImageForSpecificScreenType = async (input: {
@@ -72,7 +72,7 @@ export const generateAppIcons = async (input: {
             .writeAsync(path.join(input.outputDir, ic.filename));
     });
     await Promise.all(promises);
-    fs.writeFileSync(path.join(input.outputDir, 'Contents.json'), JSON.stringify(appIconContents));
+    fs.writeFileSync(path.join(input.outputDir, 'Contents.json'), JSON.stringify(appIconContents, null, 2));
 };
 
 const getFactorForScreenType = (screenType: IOSScreenType): number => {
