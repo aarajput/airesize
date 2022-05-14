@@ -40,7 +40,7 @@ export const validateColor = (fieldName: string, color: string) => {
     if (!color) {
         throw Error(`${fieldName} is required`);
     }
-    if (color.match(/^[\dA-F]{6}$/gm)) {
+    if (!color.match(/^[\dA-F]{6}$/gm)) {
         throw Error(`${fieldName} should be valid color. E.g: FFFFFF`);
     }
 };

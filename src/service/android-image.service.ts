@@ -1,10 +1,13 @@
 import * as jimp from 'jimp';
-import { AndroidScreenType, XAndroidScreenType } from '../enums/android-screen-type';
+import {
+    AndroidScreenType,
+    XAndroidScreenType
+} from '../enums/android-screen-type';
 import * as ImageService from './image.service';
 import * as Logger from '../utils/logger';
 import * as path from 'path';
 import * as fs from 'fs';
-import { InputSize } from '../enums/input-size';
+import {InputSize} from '../enums/input-size';
 import * as changeCase from 'change-case';
 
 export const resizeImage = async (input: {
@@ -67,9 +70,17 @@ export const generateAppIcons = async (input: {
     appIconBgColor: string,
     outputDir: string,
 }): Promise<void> => {
-    if (!fs.existsSync(input.outputDir)) {
-        fs.mkdirSync(input.outputDir, {
-            recursive: true,
-        });
-    }
+    const promises = XAndroidScreenType.values.map(async (value) => {
+        const dir = path.join(input.outputDir, `mipmap-${value}`);
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, {
+                recursive: true,
+            });
+        }
+        const image = await jimp.read(input.appIconFgPath);
+        Logger.info(`Resizing android app icon for mipmap-${value}`);
+        await image.resize(108 * getFactorForScreenType(value), 108 * getFactorForScreenType(value))
+            .writeAsync(path.join(dir, 'ic_app_icon_fg.png'));
+    });
+    await Promise.all(promises);
 };

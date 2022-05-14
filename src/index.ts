@@ -34,6 +34,14 @@ export const generateAndroidImages = (input: {
     });
 };
 
+export const generateAndroidAppIcons = (input: {
+    appIconFgPath: string,
+    appIconBgColor: string,
+    outputDir: string,
+}): Promise<void> => {
+    return AndroidImageResizer.generateAppIcons(input);
+};
+
 export const generateIOSImages = (input: {
     width: number | 'auto',
     height: number | 'auto',
@@ -122,7 +130,7 @@ const run = async () => {
             boolean: true,
         })
         .argv;
-    if (!argv.android && !argv.ios && !argv['ios-icon'] && !argv['android-icon']) {
+    if (!argv.android && !argv.ios && !argv.iosIcon && !argv.androidIcon) {
         throw new Error('Pass alteast one flat --android, --android-icon, --ios or/and -- ios-icon');
     }
     const imagePath = _.head<any>(argv._);
@@ -143,12 +151,12 @@ const run = async () => {
             outputDir: path.join(imageDir, imageNameNoExt, 'android'),
         });
     }
-    if (argv['android-icon']) {
+    if (argv.androidIcon) {
         const appIconBgColor = await getAppIconBgColorFromUser();
         await AndroidImageResizer.generateAppIcons({
             appIconFgPath: imagePath,
             appIconBgColor,
-            outputDir: path.join(imageDir, imageNameNoExt, 'android'),
+            outputDir: path.join(imageDir, imageNameNoExt, 'android-app-icons'),
         });
     }
 
@@ -164,7 +172,7 @@ const run = async () => {
             outputDir: path.join(imageDir, imageNameNoExt, 'ios'),
         });
     }
-    if (argv['ios-icon']) {
+    if (argv.iosIcon) {
         await IOSImageResizer.generateAppIcons({
             imagePath,
             outputDir: path.join(imageDir, imageNameNoExt, 'AppIcon.appiconset'),
