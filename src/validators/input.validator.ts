@@ -35,3 +35,12 @@ export const validateWidthAndHeight = (width: string, height: string) => {
         throw Error('You can\'t use auto for both Width and Height at the same time');
     }
 };
+
+export const validateColor = (fieldName: string, color: string) => {
+    if (!color) {
+        throw Error(`${fieldName} is required`);
+    }
+    if (color.match(/^[\dA-F]{6}$/gm)) {
+        throw Error(`${fieldName} should be valid color. E.g: FFFFFF`);
+    }
+};

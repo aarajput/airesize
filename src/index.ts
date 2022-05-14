@@ -9,8 +9,8 @@ import * as ImageService from './service/image.service';
 import * as yargs from 'yargs';
 import * as path from 'path';
 import * as _ from 'lodash';
-import { InputSize } from './enums/input-size';
-import { hideBin } from 'yargs/helpers';
+import {InputSize} from './enums/input-size';
+import {hideBin} from 'yargs/helpers';
 
 export const enableLog = () => {
     Logger.enableLog();
@@ -59,7 +59,6 @@ const getSizeFromUser = async (): Promise<{
     width: string;
     height: string;
 }> => {
-    Logger.enableLog();
     const size = await prompt.get([
         {
             properties: {
@@ -88,13 +87,32 @@ const getSizeFromUser = async (): Promise<{
         height,
     };
 }
+
+const getAppIconBgColorFromUser = async (): Promise<string> => {
+    const input = await prompt.get({
+        properties: {
+            color: {
+                description: `App Icon Background Color: e.g: FFFFFF`,
+                default: 'FFFFFF',
+            },
+        },
+    });
+    const color = input.color.toString().toUpperCase();
+    InputValidator.validateColor('App Icon Background Color', color);
+    return color;
+};
+
 const run = async () => {
+    Logger.enableLog();
 
     const argv = await yargs(hideBin(process.argv))
         .option('help', {
             alias: 'h'
         }).option('android', {
             alias: 'a',
+            boolean: true,
+        }).option('android-icon', {
+            alias: 'ai',
             boolean: true,
         }).option('ios', {
             alias: 'i',
@@ -104,8 +122,8 @@ const run = async () => {
             boolean: true,
         })
         .argv;
-    if (!argv.android && !argv.ios && !argv['ios-icon']) {
-        throw new Error('Pass alteast one flat --android, --ios or/and -- ios-icon');
+    if (!argv.android && !argv.ios && !argv['ios-icon'] && !argv['android-icon']) {
+        throw new Error('Pass alteast one flat --android, --android-icon, --ios or/and -- ios-icon');
     }
     const imagePath = _.head<any>(argv._);
     InputValidator.validateImagePath(imagePath);
@@ -122,6 +140,14 @@ const run = async () => {
             width,
             height,
             imagePath,
+            outputDir: path.join(imageDir, imageNameNoExt, 'android'),
+        });
+    }
+    if (argv['android-icon']) {
+        const appIconBgColor = await getAppIconBgColorFromUser();
+        await AndroidImageResizer.generateAppIcons({
+            appIconFgPath: imagePath,
+            appIconBgColor,
             outputDir: path.join(imageDir, imageNameNoExt, 'android'),
         });
     }

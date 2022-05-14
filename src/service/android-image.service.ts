@@ -61,3 +61,15 @@ const getFactorForScreenType = (screenType: AndroidScreenType): number => {
             return 4;
     }
 };
+
+export const generateAppIcons = async (input: {
+    appIconFgPath: string,
+    appIconBgColor: string,
+    outputDir: string,
+}): Promise<void> => {
+    if (!fs.existsSync(input.outputDir)) {
+        fs.mkdirSync(input.outputDir, {
+            recursive: true,
+        });
+    }
+};

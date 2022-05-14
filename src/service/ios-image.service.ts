@@ -54,6 +54,17 @@ const resizeImageForSpecificScreenType = async (input: {
     await image.resize(nWidth, nHeight).writeAsync(`${path.join(input.outputDir, newFileName)}`);
 };
 
+const getFactorForScreenType = (screenType: IOSScreenType): number => {
+    switch (screenType) {
+        case IOSScreenType.one:
+            return 1;
+        case IOSScreenType.two:
+            return 2;
+        case IOSScreenType.three:
+            return 3;
+    }
+};
+
 export const generateAppIcons = async (input: {
     imagePath: string,
     outputDir: string,
@@ -73,15 +84,4 @@ export const generateAppIcons = async (input: {
     });
     await Promise.all(promises);
     fs.writeFileSync(path.join(input.outputDir, 'Contents.json'), JSON.stringify(appIconContents, null, 2));
-};
-
-const getFactorForScreenType = (screenType: IOSScreenType): number => {
-    switch (screenType) {
-        case IOSScreenType.one:
-            return 1;
-        case IOSScreenType.two:
-            return 2;
-        case IOSScreenType.three:
-            return 3;
-    }
 };
