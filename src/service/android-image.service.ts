@@ -85,13 +85,18 @@ export const generateAppIcons = async (input: {
         Logger.info(`Resizing android app icon for mipmap-${value}`);
 
         const fgSize = 108 * getFactorForScreenType(value);
+        const resizeFactor = 0.80;
         await sharp(await sharp(Buffer.from(Constants.TRANSPARENT_SVG))
             .resize(fgSize, fgSize)
             .toBuffer())
             .composite([
                 {
                     input: await sharp(input.appIconFgPath)
-                        .resize(Math.round(fgSize * 0.50))
+                        .resize({
+                            width: Math.round(fgSize * resizeFactor),
+                            height: Math.round(fgSize * resizeFactor),
+                            fit: 'inside',
+                        })
                         .toBuffer(),
                 },
             ])
@@ -109,7 +114,11 @@ export const generateAppIcons = async (input: {
                 },
                 {
                     input: await sharp(input.appIconFgPath)
-                        .resize(Math.round(roundSize * 0.50))
+                        .resize({
+                            width: Math.round(roundSize * resizeFactor),
+                            height: Math.round(roundSize * resizeFactor),
+                            fit: 'inside',
+                        })
                         .toBuffer(),
                 },
             ])
@@ -139,4 +148,38 @@ export const generateAppIcons = async (input: {
     fs.writeFileSync(path.join(mipMap26Dir, 'ic_app_icon_round.xml'), rootXml.end({
         pretty: true,
     }));
+};
+
+export const generateNotificationIcons = async (input: Readonly<{
+    imagePath: string,
+    outputDir: string,
+}>): Promise<void> => {
+    const promises = XAndroidScreenType.values.map(async (value) => {
+        const dir = path.join(input.outputDir, `drawable-${value}`);
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, {
+                recursive: true,
+            });
+        }
+        Logger.info(`Resizing android app icon for drawable-${value}`);
+        const size = 24 * getFactorForScreenType(value);
+        await sharp(await sharp(Buffer.from(Constants.TRANSPARENT_SVG))
+            .resize({
+                width: size,
+                height: size,
+            }).toBuffer())
+            .composite([
+                {
+                    input: await sharp(input.imagePath)
+                        .resize({
+                            width: Math.round(size * 0.9),
+                            height: Math.round(size * 0.9),
+                            fit: 'inside',
+                        })
+                        .toBuffer(),
+                }
+            ])
+            .toFile(path.join(dir, 'ic_notification.png'));
+    });
+    await Promise.all(promises);
 };

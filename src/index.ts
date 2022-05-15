@@ -42,6 +42,13 @@ export const generateAndroidAppIcons = (input: {
     return AndroidImageResizer.generateAppIcons(input);
 };
 
+export const generateAndroidNotificationIcons = (input: {
+    imagePath: string,
+    outputDir: string,
+}): Promise<void> => {
+    return AndroidImageResizer.generateNotificationIcons(input);
+};
+
 export const generateIOSImages = (input: {
     width: number | 'auto',
     height: number | 'auto',
@@ -119,19 +126,22 @@ const run = async () => {
         }).option('android', {
             alias: 'a',
             boolean: true,
-        }).option('android-icon', {
-            alias: 'ai',
+        }).option('android-app-icon', {
+            alias: 'b',
+            boolean: true,
+        }).option('android-notification-icon', {
+            alias: 'c',
             boolean: true,
         }).option('ios', {
             alias: 'i',
             boolean: true,
-        }).option('ios-icon', {
-            alias: 'ii',
+        }).option('ios-app-icon', {
+            alias: 'j',
             boolean: true,
         })
         .argv;
-    if (!argv.android && !argv.ios && !argv.iosIcon && !argv.androidIcon) {
-        throw new Error('Pass alteast one flat --android, --android-icon, --ios or/and -- ios-icon');
+    if (!argv.android && !argv.ios && !argv.iosAppIcon && !argv.androidAppIcon && !argv.androidNotificationIcon) {
+        throw new Error('Pass alteast one argument --android, --android-app-icon, --android-notification-icon, --ios or/and --ios-app-icon');
     }
     const imagePath = _.head<any>(argv._);
     InputValidator.validateImagePath(imagePath);
@@ -151,12 +161,18 @@ const run = async () => {
             outputDir: path.join(imageDir, imageNameNoExt, 'android'),
         });
     }
-    if (argv.androidIcon) {
+    if (argv.androidAppIcon) {
         const appIconBgColor = await getAppIconBgColorFromUser();
         await AndroidImageResizer.generateAppIcons({
             appIconFgPath: imagePath,
             appIconBgColor,
             outputDir: path.join(imageDir, imageNameNoExt, 'android-app-icons'),
+        });
+    }
+    if (argv.androidNotificationIcon) {
+        await AndroidImageResizer.generateNotificationIcons({
+            imagePath,
+            outputDir: path.join(imageDir, imageNameNoExt, 'android-notification-icons'),
         });
     }
 
@@ -172,10 +188,10 @@ const run = async () => {
             outputDir: path.join(imageDir, imageNameNoExt, 'ios'),
         });
     }
-    if (argv.iosIcon) {
+    if (argv.iosAppIcon) {
         await IOSImageResizer.generateAppIcons({
             imagePath,
-            outputDir: path.join(imageDir, imageNameNoExt, 'AppIcon.appiconset'),
+            outputDir: path.join(imageDir, imageNameNoExt, 'ios-app-icons'),
         });
     }
     return `All images resized successfully. You can find them in ${path.join(imageDir, imageNameNoExt)}`;
