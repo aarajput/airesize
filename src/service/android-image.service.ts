@@ -9,6 +9,9 @@ import * as path from 'path';
 import * as fs from 'fs';
 import {InputSize} from '../enums/input-size';
 import * as changeCase from 'change-case';
+import * as sharp from 'sharp';
+import * as xmlbuilder from 'xmlbuilder';
+import {Constants} from '../others/constants';
 
 export const resizeImage = async (input: {
     imagePath: string,
@@ -77,10 +80,61 @@ export const generateAppIcons = async (input: {
                 recursive: true,
             });
         }
-        const image = await jimp.read(input.appIconFgPath);
         Logger.info(`Resizing android app icon for mipmap-${value}`);
-        await image.resize(108 * getFactorForScreenType(value), 108 * getFactorForScreenType(value))
-            .writeAsync(path.join(dir, 'ic_app_icon_fg.png'));
+
+        const fgSize = 108 * getFactorForScreenType(value);
+        await sharp(await sharp(Buffer.from(Constants.TRANSPARENT_SVG))
+            .resize(fgSize, fgSize)
+            .toBuffer())
+            .composite([
+                {
+                    input: await sharp(input.appIconFgPath)
+                        .resize(Math.round(fgSize * 0.50))
+                        .toBuffer(),
+                },
+            ])
+            .toFile(path.join(dir, 'ic_app_icon_fg.png'));
+
+        const roundSize = 48 * getFactorForScreenType(value);
+        await sharp(await sharp(Buffer.from(Constants.TRANSPARENT_SVG))
+            .resize(roundSize, roundSize)
+            .toBuffer())
+            .composite([
+                {
+                    input: await sharp(Buffer.from(Constants.getCircleSVG(input.appIconBgColor)))
+                        .resize(Math.round(roundSize * 0.9))
+                        .toBuffer(),
+                },
+                {
+                    input: await sharp(input.appIconFgPath)
+                        .resize(Math.round(roundSize * 0.50))
+                        .toBuffer(),
+                },
+            ])
+            .toFile(path.join(dir, 'ic_app_icon_round.png'));
     });
     await Promise.all(promises);
+    Logger.info(`Generating ic_app_icon_round.xml`);
+    const rootXml = xmlbuilder.create({
+        'adaptive-icon': {
+            '@xmlns:android': 'http://schemas.android.com/apk/res/android',
+        },
+    }, {
+        encoding: 'utf-8',
+    });
+    rootXml.ele('background', {
+        'android:drawable': `#${input.appIconBgColor}`,
+    });
+    rootXml.ele('foreground', {
+        'android:drawable': '@mipmap/ic_app_icon_fg',
+    });
+    const mipMap26Dir = path.join(input.outputDir, 'mipmap-anydpi-v26');
+    if (!fs.existsSync(mipMap26Dir)) {
+        fs.mkdirSync(mipMap26Dir, {
+            recursive: true,
+        });
+    }
+    fs.writeFileSync(path.join(mipMap26Dir, 'ic_app_icon_round.xml'), rootXml.end({
+        pretty: true,
+    }));
 };
