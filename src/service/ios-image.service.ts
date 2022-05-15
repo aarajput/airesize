@@ -1,14 +1,14 @@
 import * as ImageService from './image.service';
 import * as fs from 'fs';
 import * as path from 'path';
-import { IOSScreenType, XIOSScreenType } from '../enums/ios-screen-type';
+import {IOSScreenType, XIOSScreenType} from '../enums/ios-screen-type';
 import * as changeCase from 'change-case';
-import * as jimp from 'jimp';
-import { InputSize } from '../enums/input-size';
+import * as sharp from 'sharp';
+import {InputSize} from '../enums/input-size';
 import * as Logger from '../utils/logger';
-import { appIconContents } from '../others/ios-app-icon-contents';
+import {appIconContents} from '../others/ios-app-icon-contents';
 import * as _ from 'lodash';
-import { iosImageContents } from '../others/ios-image-contents';
+import {iosImageContents} from '../others/ios-image-contents';
 
 export const resizeImage = async (input: {
     imagePath: string,
@@ -45,13 +45,16 @@ const resizeImageForSpecificScreenType = async (input: {
             recursive: true,
         });
     }
-    const image = await jimp.read(input.imagePath);
-    const nWidth = input.width === InputSize.auto ? jimp.AUTO : parseFloat(input.width) * getFactorForScreenType(input.screenType);
-    const nHeight = input.height === InputSize.auto ? jimp.AUTO : parseFloat(input.height) * getFactorForScreenType(input.screenType);
+    const nWidth = input.width === InputSize.auto ? undefined : parseFloat(input.width) * getFactorForScreenType(input.screenType);
+    const nHeight = input.height === InputSize.auto ? undefined : parseFloat(input.height) * getFactorForScreenType(input.screenType);
 
     Logger.info(`Resizing ios image for screen type ${input.screenType} <${nWidth === -1 ? 'auto' : nWidth}X${nHeight === -1 ? 'auto' : nHeight}>`);
-
-    await image.resize(nWidth, nHeight).writeAsync(`${path.join(input.outputDir, newFileName)}`);
+    await sharp(input.imagePath)
+        .resize({
+            width: nWidth,
+            height: nHeight,
+        })
+        .toFile(path.join(input.outputDir, newFileName));
 };
 
 const getFactorForScreenType = (screenType: IOSScreenType): number => {
@@ -77,10 +80,15 @@ export const generateAppIcons = async (input: {
     const promises = appIconContents.images.map(async (ic) => {
         const scale = +ic.scale.replace('x', '');
         const nSize = ic.size!.split('x');
-        const image = await jimp.read(input.imagePath);
         Logger.info(`Resizing ios app icon for ${ic.filename}`);
-        await image.resize(+nSize[0] * scale, +nSize[1] * scale)
-            .writeAsync(path.join(input.outputDir, ic.filename));
+        await sharp(input.imagePath)
+            .resize(
+                {
+                    width: +nSize[0] * scale,
+                    height: +nSize[1] * scale,
+                }
+            )
+            .toFile(path.join(input.outputDir, ic.filename))
     });
     await Promise.all(promises);
     fs.writeFileSync(path.join(input.outputDir, 'Contents.json'), JSON.stringify(appIconContents, null, 2));

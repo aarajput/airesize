@@ -1,4 +1,3 @@
-import * as jimp from 'jimp';
 import {
     AndroidScreenType,
     XAndroidScreenType
@@ -44,13 +43,16 @@ const resizeImageForSpecificScreenType = async (input: {
             recursive: true,
         });
     }
-    const image = await jimp.read(input.imagePath);
-    const nWidth = input.width === InputSize.auto ? jimp.AUTO : parseFloat(input.width) * getFactorForScreenType(input.screenType);
-    const nHeight = input.height === InputSize.auto ? jimp.AUTO : parseFloat(input.height) * getFactorForScreenType(input.screenType);
+    const nWidth = input.width === InputSize.auto ? undefined : parseFloat(input.width) * getFactorForScreenType(input.screenType);
+    const nHeight = input.height === InputSize.auto ? undefined : parseFloat(input.height) * getFactorForScreenType(input.screenType);
 
     Logger.info(`Resizing android image for screen type ${input.screenType} <${nWidth === -1 ? 'auto' : nWidth}X${nHeight === -1 ? 'auto' : nHeight}>`);
-
-    await image.resize(nWidth, nHeight).writeAsync(`${path.join(dirPath, newFileName)}`);
+    await sharp(input.imagePath)
+        .resize({
+            width: nWidth,
+            height: nHeight,
+        })
+        .toFile(path.join(dirPath, newFileName));
 };
 
 const getFactorForScreenType = (screenType: AndroidScreenType): number => {
