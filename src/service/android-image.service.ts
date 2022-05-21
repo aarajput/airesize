@@ -85,7 +85,7 @@ export const generateAppIcons = async (input: {
         Logger.info(`Resizing android app icon for mipmap-${value}`);
 
         const fgSize = 108 * getFactorForScreenType(value);
-        const resizeFactor = 0.80;
+        const resizeFactor = 0.60;
         await sharp(await sharp(Buffer.from(Constants.TRANSPARENT_SVG))
             .resize(fgSize, fgSize)
             .toBuffer())
@@ -126,17 +126,17 @@ export const generateAppIcons = async (input: {
     });
     await Promise.all(promises);
     Logger.info(`Generating ic_app_icon_round.xml`);
-    const rootXml = xmlbuilder.create({
+    const icAppIconRoundXml = xmlbuilder.create({
         'adaptive-icon': {
             '@xmlns:android': 'http://schemas.android.com/apk/res/android',
         },
     }, {
         encoding: 'utf-8',
     });
-    rootXml.ele('background', {
-        'android:drawable': `#${input.appIconBgColor}`,
+    icAppIconRoundXml.ele('background', {
+        'android:drawable': '@color/ic_app_icon_bg',
     });
-    rootXml.ele('foreground', {
+    icAppIconRoundXml.ele('foreground', {
         'android:drawable': '@mipmap/ic_app_icon_fg',
     });
     const mipMap26Dir = path.join(input.outputDir, 'mipmap-anydpi-v26');
@@ -145,7 +145,21 @@ export const generateAppIcons = async (input: {
             recursive: true,
         });
     }
-    fs.writeFileSync(path.join(mipMap26Dir, 'ic_app_icon_round.xml'), rootXml.end({
+    fs.writeFileSync(path.join(mipMap26Dir, 'ic_app_icon_round.xml'), icAppIconRoundXml.end({
+        pretty: true,
+    }));
+    const valuesDir = path.join(input.outputDir, 'values');
+    if (!fs.existsSync(valuesDir)) {
+        fs.mkdirSync(valuesDir, {
+            recursive: true,
+        });
+    }
+    const icAppIconRoundColorXml = xmlbuilder.create('resources', {
+        encoding: 'utf-8',
+    }).ele('color', {
+        'ic_app_icon_bg': `#${input.appIconBgColor}`,
+    });
+    fs.writeFileSync(path.join(valuesDir, 'ic_app_icon_colors.xml'), icAppIconRoundColorXml.end({
         pretty: true,
     }));
 };
