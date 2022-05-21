@@ -157,9 +157,9 @@ export const generateAppIcons = async (input: {
     const icAppIconRoundColorXml = xmlbuilder.create('resources', {
         encoding: 'utf-8',
     }).ele('color', {
-        'ic_app_icon_bg': `#${input.appIconBgColor}`,
-    });
-    fs.writeFileSync(path.join(valuesDir, 'ic_app_icon_colors.xml'), icAppIconRoundColorXml.end({
+        'name': 'ic_app_icon_bg',
+    }, `#${input.appIconBgColor}`);
+    fs.writeFileSync(path.join(valuesDir, 'app_icon_colors.xml'), icAppIconRoundColorXml.end({
         pretty: true,
     }));
 };
