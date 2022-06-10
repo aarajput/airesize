@@ -1,4 +1,4 @@
-import { InputSize } from '../enums/input-size';
+import {InputSize} from '../enums/input-size';
 import * as fs from 'fs';
 import * as ImageService from '../service/image.service';
 
@@ -36,11 +36,18 @@ export const validateWidthAndHeight = (width: string, height: string) => {
     }
 };
 
-export const validateColor = (fieldName: string, color: string) => {
-    if (!color) {
-        throw Error(`${fieldName} is required`);
+export const validateColor = (input: {
+    fieldName: string,
+    color: string,
+    optional?: boolean,
+}) => {
+    if (input.optional && !input.color.trim()) {
+        return;
     }
-    if (!color.match(/^[\dA-F]{6}$/gm)) {
-        throw Error(`${fieldName} should be valid color. E.g: FFFFFF`);
+    if (!input.color) {
+        throw Error(`${input.fieldName} is required`);
+    }
+    if (!input.color.match(/^[\dA-F]{6}$/gm)) {
+        throw Error(`${input.fieldName} should be valid color. E.g: FFFFFF`);
     }
 };

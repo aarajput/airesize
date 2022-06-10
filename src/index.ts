@@ -16,6 +16,7 @@ import {
     IGenerateAndroidAppIconOptions,
     IGenerateAndroidImagesOptions,
     IGenerateAndroidNotificationIcons,
+    IGenerateIOSAppIcons,
     IGenerateIOSImages
 } from './others/interfaces';
 
@@ -44,11 +45,8 @@ export const generateIOSImages = (options: IGenerateIOSImages): Promise<void> =>
     return IOSImageResizer.resizeImage(options);
 };
 
-export const generateIOSAppIcons = (input: {
-    imagePath: string,
-    outputDir: string,
-}): Promise<void> => {
-    return IOSImageResizer.generateAppIcons(input);
+export const generateIOSAppIcons = (options: IGenerateIOSAppIcons): Promise<void> => {
+    return IOSImageResizer.generateAppIcons(options);
 };
 
 const getSizeFromUser = async (): Promise<{
@@ -73,8 +71,8 @@ const getSizeFromUser = async (): Promise<{
             },
         },
     ]);
-    const width = size.width.toString().toLowerCase();
-    const height = size.height?.toString().toLowerCase();
+    const width = size.width.toString().trim().toLowerCase();
+    const height = size.height?.toString().trim().toLowerCase();
     InputValidator.validateSize('Width', width as string);
     InputValidator.validateSize('Height', height as string);
     InputValidator.validateWidthAndHeight(width, height);
@@ -84,18 +82,25 @@ const getSizeFromUser = async (): Promise<{
     };
 }
 
-const getAppIconBgColorFromUser = async (): Promise<string> => {
+const getAppIconBgColorFromUser = async (options?: {
+    optional?: boolean,
+}): Promise<string | undefined> => {
     const input = await prompt.get({
         properties: {
             color: {
-                description: `App Icon Background Color: e.g: FFFFFF`,
-                default: 'FFFFFF',
+                description: `App Icon Background Color ${options?.optional ? '(Optional)' : ''}: e.g: FFFFFF`,
+                default: options?.optional ? undefined : 'FFFFFF',
+                allowEmpty: options?.optional,
             },
         },
     });
-    const color = input.color.toString().toUpperCase();
-    InputValidator.validateColor('App Icon Background Color', color);
-    return color;
+    const color = input.color.toString().trim().toUpperCase();
+    InputValidator.validateColor({
+        fieldName: 'App Icon Background Color',
+        color,
+        optional: options?.optional,
+    });
+    return color || undefined;
 };
 
 const run = async () => {
@@ -128,14 +133,13 @@ const run = async () => {
     InputValidator.validateImagePath(imagePath);
 
     const imageDir = path.dirname(path.resolve(imagePath));
-    const imageNameNoExt = ImageService.getImageNameWithoutExtension(imagePath);
+    const imageNameWithoutExt = ImageService.getImageNameWithoutExtension(imagePath);
 
     if (argv.android) {
         const {
             width,
             height,
         } = await getSizeFromUser();
-        const imageNameWithoutExt = ImageService.getImageNameWithoutExtension(imagePath);
         const snakeCaseImageName = changeCase.snakeCase(imageNameWithoutExt);
         await AndroidImageResizer.resizeImage({
             input: {
@@ -144,7 +148,7 @@ const run = async () => {
             output: {
                 width,
                 height,
-                dir: path.join(imageDir, imageNameNoExt, 'android'),
+                dir: path.join(imageDir, imageNameWithoutExt, 'android'),
                 imageName: snakeCaseImageName,
             },
         });
@@ -154,10 +158,10 @@ const run = async () => {
         await AndroidImageResizer.generateAppIcons({
             input: {
                 foregroundIconPath: imagePath,
-                backgroundIconColor,
+                backgroundIconColor: backgroundIconColor!,
             },
             output: {
-                dir: path.join(imageDir, imageNameNoExt, 'android-app-icons'),
+                dir: path.join(imageDir, imageNameWithoutExt, 'android-app-icons'),
                 roundIconName: 'ic_app_icon_round',
                 foregroundIconName: 'ic_app_icon_fg',
                 colorFileName: 'app_icon_colors'
@@ -170,7 +174,7 @@ const run = async () => {
                 imagePath,
             },
             output: {
-                dir: path.join(imageDir, imageNameNoExt, 'android-notification-icons'),
+                dir: path.join(imageDir, imageNameWithoutExt, 'android-notification-icons'),
                 imageName: 'ic_notification',
             },
         });
@@ -181,7 +185,6 @@ const run = async () => {
             width,
             height,
         } = await getSizeFromUser();
-        const imageNameWithoutExt = ImageService.getImageNameWithoutExtension(imagePath);
         const pascalCaseImageName = changeCase.pascalCase(imageNameWithoutExt);
         await IOSImageResizer.resizeImage({
             input: {
@@ -190,18 +193,27 @@ const run = async () => {
             output: {
                 width,
                 height,
-                dir: path.join(imageDir, imageNameNoExt, 'ios'),
+                dir: path.join(imageDir, imageNameWithoutExt, 'ios'),
                 imageName: pascalCaseImageName,
             },
         });
     }
     if (argv.iosAppIcon) {
+        const backgroundIconColor = await getAppIconBgColorFromUser({
+            optional: true,
+        });
         await IOSImageResizer.generateAppIcons({
-            imagePath,
-            outputDir: path.join(imageDir, imageNameNoExt, 'ios-app-icons'),
+            input: {
+                iconPath: imagePath,
+                iconColor: backgroundIconColor,
+            },
+            output: {
+                dir: path.join(imageDir, imageNameWithoutExt, 'ios-app-icons'),
+                iconName: 'Icon-App',
+            },
         });
     }
-    return `All images resized successfully. You can find them in ${path.join(imageDir, imageNameNoExt)}`;
+    return `All images resized successfully. You can find them in ${path.join(imageDir, imageNameWithoutExt)}`;
 };
 
 if (require.main === module) {

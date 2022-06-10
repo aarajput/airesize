@@ -63,3 +63,14 @@ export interface IGenerateIOSImages {
         imageName: string,
     },
 }
+
+export interface IGenerateIOSAppIcons {
+    input: {
+        iconPath: string,
+        iconColor?: string,
+    },
+    output: {
+        dir: string,
+        iconName: string,
+    },
+}

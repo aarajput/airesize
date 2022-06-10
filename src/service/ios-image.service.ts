@@ -8,7 +8,7 @@ import * as Logger from '../utils/logger';
 import {appIconContents} from '../others/ios-app-icon-contents';
 import * as _ from 'lodash';
 import {iosImageContents} from '../others/ios-image-contents';
-import {IGenerateIOSImages} from '../others/interfaces';
+import {IGenerateIOSAppIcons, IGenerateIOSImages} from '../others/interfaces';
 
 export const resizeImage = async (options: IGenerateIOSImages) => {
     const promises: Promise<void>[] = XIOSScreenType.values.map((screenType) => resizeImageForSpecificScreenType(options, screenType));
@@ -50,28 +50,29 @@ const getFactorForScreenType = (screenType: IOSScreenType): number => {
     }
 };
 
-export const generateAppIcons = async (input: {
-    imagePath: string,
-    outputDir: string,
-}): Promise<void> => {
-    if (!fs.existsSync(input.outputDir)) {
-        fs.mkdirSync(input.outputDir, {
+export const generateAppIcons = async (options: IGenerateIOSAppIcons): Promise<void> => {
+    if (!fs.existsSync(options.output.dir)) {
+        fs.mkdirSync(options.output.dir, {
             recursive: true,
         });
     }
-    const promises = appIconContents.images.map(async (ic) => {
+    const newContent = _.cloneDeep(appIconContents);
+    newContent.images.forEach((img) => {
+        img.filename = img.filename.replace('[IMAGE_NAME]', options.output.iconName);
+    });
+    const promises = newContent.images.map(async (ic) => {
         const scale = +ic.scale.replace('x', '');
         const nSize = ic.size!.split('x');
         Logger.info(`Resizing ios app icon for ${ic.filename}`);
-        await sharp(input.imagePath)
+        await sharp(options.input.iconPath)
             .resize(
                 {
                     width: +nSize[0] * scale,
                     height: +nSize[1] * scale,
                 }
             )
-            .toFile(path.join(input.outputDir, ic.filename))
+            .toFile(path.join(options.output.dir, ic.filename))
     });
     await Promise.all(promises);
-    fs.writeFileSync(path.join(input.outputDir, 'Contents.json'), JSON.stringify(appIconContents, null, 2));
+    fs.writeFileSync(path.join(options.output.dir, 'Contents.json'), JSON.stringify(newContent, null, 2));
 };
