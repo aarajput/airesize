@@ -12,6 +12,7 @@ import * as _ from 'lodash';
 import * as changeCase from 'change-case';
 import {InputSize} from './enums/input-size';
 import {hideBin} from 'yargs/helpers';
+import {IGenerateAndroidAppIconOptions} from './others/interfaces';
 
 export const enableLog = () => {
     Logger.enableLog();
@@ -37,12 +38,9 @@ export const generateAndroidImages = (options: {
     });
 };
 
-export const generateAndroidAppIcons = (input: {
-    appIconFgPath: string,
-    appIconBgColor: string,
-    outputDir: string,
-}): Promise<void> => {
-    return AndroidImageResizer.generateAppIcons(input);
+export const generateAndroidAppIcons = (options: IGenerateAndroidAppIconOptions)
+    : Promise<void> => {
+    return AndroidImageResizer.generateAppIcons(options);
 };
 
 export const generateAndroidNotificationIcons = (input: {
@@ -168,11 +166,18 @@ const run = async () => {
         });
     }
     if (argv.androidAppIcon) {
-        const appIconBgColor = await getAppIconBgColorFromUser();
+        const backgroundIconColor = await getAppIconBgColorFromUser();
         await AndroidImageResizer.generateAppIcons({
-            appIconFgPath: imagePath,
-            appIconBgColor,
-            outputDir: path.join(imageDir, imageNameNoExt, 'android-app-icons'),
+            input: {
+                foregroundIconPath: imagePath,
+                backgroundIconColor,
+            },
+            output: {
+                dir: path.join(imageDir, imageNameNoExt, 'android-app-icons'),
+                roundIconName: 'ic_app_icon_round',
+                foregroundIconName: 'ic_app_icon_fg',
+                colorFileName: 'app_icon_colors'
+            },
         });
     }
     if (argv.androidNotificationIcon) {

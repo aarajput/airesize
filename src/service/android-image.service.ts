@@ -10,6 +10,7 @@ import {InputSize} from '../enums/input-size';
 import * as sharp from 'sharp';
 import * as xmlbuilder from 'xmlbuilder';
 import {Constants} from '../others/constants';
+import {IGenerateAndroidAppIconOptions} from '../others/interfaces';
 
 export const resizeImage = async (input: {
     imagePath: string,
@@ -69,13 +70,10 @@ const getFactorForScreenType = (screenType: AndroidScreenType): number => {
     }
 };
 
-export const generateAppIcons = async (input: {
-    appIconFgPath: string,
-    appIconBgColor: string,
-    outputDir: string,
-}): Promise<void> => {
+export const generateAppIcons = async (options: IGenerateAndroidAppIconOptions)
+    : Promise<void> => {
     const promises = XAndroidScreenType.values.map(async (value) => {
-        const dir = path.join(input.outputDir, `mipmap-${value}`);
+        const dir = path.join(options.output.dir, `mipmap-${value}`);
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, {
                 recursive: true,
@@ -90,7 +88,7 @@ export const generateAppIcons = async (input: {
             .toBuffer())
             .composite([
                 {
-                    input: await sharp(input.appIconFgPath)
+                    input: await sharp(options.input.foregroundIconPath)
                         .resize({
                             width: Math.round(fgSize * resizeFactor),
                             height: Math.round(fgSize * resizeFactor),
@@ -99,7 +97,7 @@ export const generateAppIcons = async (input: {
                         .toBuffer(),
                 },
             ])
-            .toFile(path.join(dir, 'ic_app_icon_fg.png'));
+            .toFile(path.join(dir, `${options.output.foregroundIconName}.png`));
 
         const roundSize = 48 * getFactorForScreenType(value);
         await sharp(await sharp(Buffer.from(Constants.TRANSPARENT_SVG))
@@ -107,12 +105,12 @@ export const generateAppIcons = async (input: {
             .toBuffer())
             .composite([
                 {
-                    input: await sharp(Buffer.from(Constants.getCircleSVG(input.appIconBgColor)))
+                    input: await sharp(Buffer.from(Constants.getCircleSVG(options.input.backgroundIconColor)))
                         .resize(Math.round(roundSize * 0.9))
                         .toBuffer(),
                 },
                 {
-                    input: await sharp(input.appIconFgPath)
+                    input: await sharp(options.input.foregroundIconPath)
                         .resize({
                             width: Math.round(roundSize * resizeFactor),
                             height: Math.round(roundSize * resizeFactor),
@@ -121,10 +119,10 @@ export const generateAppIcons = async (input: {
                         .toBuffer(),
                 },
             ])
-            .toFile(path.join(dir, 'ic_app_icon_round.png'));
+            .toFile(path.join(dir, `${options.output.roundIconName}.png`));
     });
     await Promise.all(promises);
-    Logger.info(`Generating ic_app_icon_round.xml`);
+    Logger.info(`Generating ${options.output.roundIconName}.xml`);
     const icAppIconRoundXml = xmlbuilder.create({
         'adaptive-icon': {
             '@xmlns:android': 'http://schemas.android.com/apk/res/android',
@@ -138,16 +136,16 @@ export const generateAppIcons = async (input: {
     icAppIconRoundXml.ele('foreground', {
         'android:drawable': '@mipmap/ic_app_icon_fg',
     });
-    const mipMap26Dir = path.join(input.outputDir, 'mipmap-anydpi-v26');
+    const mipMap26Dir = path.join(options.output.dir, 'mipmap-anydpi-v26');
     if (!fs.existsSync(mipMap26Dir)) {
         fs.mkdirSync(mipMap26Dir, {
             recursive: true,
         });
     }
-    fs.writeFileSync(path.join(mipMap26Dir, 'ic_app_icon_round.xml'), icAppIconRoundXml.end({
+    fs.writeFileSync(path.join(mipMap26Dir, `${options.output.roundIconName}.xml`), icAppIconRoundXml.end({
         pretty: true,
     }));
-    const valuesDir = path.join(input.outputDir, 'values');
+    const valuesDir = path.join(options.output.dir, 'values');
     if (!fs.existsSync(valuesDir)) {
         fs.mkdirSync(valuesDir, {
             recursive: true,
@@ -157,8 +155,8 @@ export const generateAppIcons = async (input: {
         encoding: 'utf-8',
     }).ele('color', {
         'name': 'ic_app_icon_bg',
-    }, `#${input.appIconBgColor}`);
-    fs.writeFileSync(path.join(valuesDir, 'app_icon_colors.xml'), icAppIconRoundColorXml.end({
+    }, `#${options.input.backgroundIconColor}`);
+    fs.writeFileSync(path.join(valuesDir, `${options.output.colorFileName}.xml`), icAppIconRoundColorXml.end({
         pretty: true,
     }));
 };
