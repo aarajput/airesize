@@ -12,7 +12,10 @@ import * as _ from 'lodash';
 import * as changeCase from 'change-case';
 import {InputSize} from './enums/input-size';
 import {hideBin} from 'yargs/helpers';
-import {IGenerateAndroidAppIconOptions} from './others/interfaces';
+import {
+    IGenerateAndroidAppIconOptions,
+    IGenerateAndroidImagesOptions
+} from './others/interfaces';
 
 export const enableLog = () => {
     Logger.enableLog();
@@ -22,20 +25,8 @@ export const disableLog = () => {
     Logger.disableLog();
 };
 
-export const generateAndroidImages = (options: {
-    width: number | 'auto',
-    height: number | 'auto',
-    imagePath: string,
-    outputDir: string,
-    outputImageName: string,
-}): Promise<void> => {
-    return AndroidImageResizer.resizeImage({
-        width: `${options.width}`,
-        height: `${options.height}`,
-        imagePath: options.imagePath,
-        outputDir: options.outputDir,
-        outputImageName: options.outputImageName,
-    });
+export const generateAndroidImages = (options: IGenerateAndroidImagesOptions): Promise<void> => {
+    return AndroidImageResizer.resizeImage(options);
 };
 
 export const generateAndroidAppIcons = (options: IGenerateAndroidAppIconOptions)
@@ -158,11 +149,15 @@ const run = async () => {
         const imageNameWithoutExt = ImageService.getImageNameWithoutExtension(imagePath);
         const snakeCaseImageName = changeCase.snakeCase(imageNameWithoutExt);
         await AndroidImageResizer.resizeImage({
-            width,
-            height,
-            imagePath,
-            outputDir: path.join(imageDir, imageNameNoExt, 'android'),
-            outputImageName: snakeCaseImageName,
+            input: {
+                imagePath,
+            },
+            output: {
+                width: width === InputSize.auto ? width : parseFloat(width),
+                height: height === InputSize.auto ? height : parseFloat(height),
+                dir: path.join(imageDir, imageNameNoExt, 'android'),
+                imageName: snakeCaseImageName,
+            },
         });
     }
     if (argv.androidAppIcon) {

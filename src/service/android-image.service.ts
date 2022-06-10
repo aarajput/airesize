@@ -10,50 +10,39 @@ import {InputSize} from '../enums/input-size';
 import * as sharp from 'sharp';
 import * as xmlbuilder from 'xmlbuilder';
 import {Constants} from '../others/constants';
-import {IGenerateAndroidAppIconOptions} from '../others/interfaces';
+import {
+    IGenerateAndroidAppIconOptions,
+    IGenerateAndroidImagesOptions
+} from '../others/interfaces';
 
-export const resizeImage = async (input: {
-    imagePath: string,
-    width: string,
-    height: string,
-    outputDir: string,
-    outputImageName: string,
-}) => {
+export const resizeImage = async (options: IGenerateAndroidImagesOptions) => {
     const promises: Promise<any>[] = XAndroidScreenType.values.map((screenType) =>
-        resizeImageForSpecificScreenType({
-            ...input,
-            screenType,
-        }));
+        resizeImageForSpecificScreenType(options, screenType));
     await Promise.all(promises);
 };
 
-const resizeImageForSpecificScreenType = async (input: {
-    imagePath: string,
-    width: string,
-    height: string,
-    outputDir: string,
-    outputImageName: string,
-    screenType: AndroidScreenType,
-}) => {
-    const newFileName = `${input.outputImageName}${ImageService.getImageExtension(input.imagePath)}`;
+const resizeImageForSpecificScreenType =
+    async (opitons: IGenerateAndroidImagesOptions,
+           screenType: AndroidScreenType) => {
+        const newFileName = `${opitons.output.imageName}${ImageService.getImageExtension(opitons.input.imagePath)}`;
 
-    const dirPath = path.join(input.outputDir, `drawable-${input.screenType}`);
-    if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, {
-            recursive: true,
-        });
-    }
-    const nWidth = input.width === InputSize.auto ? undefined : parseFloat(input.width) * getFactorForScreenType(input.screenType);
-    const nHeight = input.height === InputSize.auto ? undefined : parseFloat(input.height) * getFactorForScreenType(input.screenType);
+        const dirPath = path.join(opitons.output.dir, `drawable-${screenType}`);
+        if (!fs.existsSync(dirPath)) {
+            fs.mkdirSync(dirPath, {
+                recursive: true,
+            });
+        }
+        const nWidth = opitons.output.width === InputSize.auto ? undefined : opitons.output.width * getFactorForScreenType(screenType);
+        const nHeight = opitons.output.height === InputSize.auto ? undefined : opitons.output.height * getFactorForScreenType(screenType);
 
-    Logger.info(`Resizing android image for screen type ${input.screenType} <${nWidth === -1 ? 'auto' : nWidth}X${nHeight === -1 ? 'auto' : nHeight}>`);
-    await sharp(input.imagePath)
-        .resize({
-            width: nWidth,
-            height: nHeight,
-        })
-        .toFile(path.join(dirPath, newFileName));
-};
+        Logger.info(`Resizing android image for screen type ${screenType} <${nWidth === -1 ? 'auto' : nWidth}X${nHeight === -1 ? 'auto' : nHeight}>`);
+        await sharp(opitons.input.imagePath)
+            .resize({
+                width: nWidth,
+                height: nHeight,
+            })
+            .toFile(path.join(dirPath, newFileName));
+    };
 
 const getFactorForScreenType = (screenType: AndroidScreenType): number => {
     switch (screenType) {

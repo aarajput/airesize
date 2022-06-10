@@ -1,3 +1,5 @@
+import {InputSize} from '../enums/input-size';
+
 export interface IContent {
     images: IContentImage[];
     info: IContentInfo;
@@ -25,5 +27,17 @@ export interface IGenerateAndroidAppIconOptions {
         foregroundIconName: string,
         roundIconName: string,
         colorFileName: string,
+    },
+}
+
+export interface IGenerateAndroidImagesOptions {
+    input: {
+        imagePath: string,
+    },
+    output: {
+        width: number | InputSize.auto,
+        height: number | InputSize.auto,
+        dir: string,
+        imageName: string,
     },
 }
