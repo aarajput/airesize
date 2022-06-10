@@ -7,7 +7,6 @@ import * as Logger from '../utils/logger';
 import * as path from 'path';
 import * as fs from 'fs';
 import {InputSize} from '../enums/input-size';
-import * as changeCase from 'change-case';
 import * as sharp from 'sharp';
 import * as xmlbuilder from 'xmlbuilder';
 import {Constants} from '../others/constants';
@@ -17,6 +16,7 @@ export const resizeImage = async (input: {
     width: string,
     height: string,
     outputDir: string,
+    outputImageName: string,
 }) => {
     const promises: Promise<any>[] = XAndroidScreenType.values.map((screenType) =>
         resizeImageForSpecificScreenType({
@@ -28,14 +28,13 @@ export const resizeImage = async (input: {
 
 const resizeImageForSpecificScreenType = async (input: {
     imagePath: string,
-    outputDir: string,
     width: string,
     height: string,
+    outputDir: string,
+    outputImageName: string,
     screenType: AndroidScreenType,
 }) => {
-    const imageNameWithoutExt = ImageService.getImageNameWithoutExtension(input.imagePath);
-    const newImageName = changeCase.snakeCase(imageNameWithoutExt);
-    const newFileName = `${newImageName}${ImageService.getImageExtension(input.imagePath)}`;
+    const newFileName = `${input.outputImageName}${ImageService.getImageExtension(input.imagePath)}`;
 
     const dirPath = path.join(input.outputDir, `drawable-${input.screenType}`);
     if (!fs.existsSync(dirPath)) {

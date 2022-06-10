@@ -9,6 +9,7 @@ import * as ImageService from './service/image.service';
 import * as yargs from 'yargs';
 import * as path from 'path';
 import * as _ from 'lodash';
+import * as changeCase from 'change-case';
 import {InputSize} from './enums/input-size';
 import {hideBin} from 'yargs/helpers';
 
@@ -20,17 +21,19 @@ export const disableLog = () => {
     Logger.disableLog();
 };
 
-export const generateAndroidImages = (input: {
+export const generateAndroidImages = (options: {
     width: number | 'auto',
     height: number | 'auto',
     imagePath: string,
     outputDir: string,
+    outputImageName: string,
 }): Promise<void> => {
     return AndroidImageResizer.resizeImage({
-        width: `${input.width}`,
-        height: `${input.height}`,
-        imagePath: input.imagePath,
-        outputDir: input.outputDir,
+        width: `${options.width}`,
+        height: `${options.height}`,
+        imagePath: options.imagePath,
+        outputDir: options.outputDir,
+        outputImageName: options.outputImageName,
     });
 };
 
@@ -154,11 +157,14 @@ const run = async () => {
             width,
             height,
         } = await getSizeFromUser();
+        const imageNameWithoutExt = ImageService.getImageNameWithoutExtension(imagePath);
+        const snakeCaseImageName = changeCase.snakeCase(imageNameWithoutExt);
         await AndroidImageResizer.resizeImage({
             width,
             height,
             imagePath,
             outputDir: path.join(imageDir, imageNameNoExt, 'android'),
+            outputImageName: snakeCaseImageName,
         });
     }
     if (argv.androidAppIcon) {
