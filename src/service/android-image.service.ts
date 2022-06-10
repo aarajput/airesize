@@ -22,21 +22,21 @@ export const resizeImage = async (options: IGenerateAndroidImagesOptions) => {
 };
 
 const resizeImageForSpecificScreenType =
-    async (opitons: IGenerateAndroidImagesOptions,
+    async (options: IGenerateAndroidImagesOptions,
            screenType: AndroidScreenType) => {
-        const newFileName = `${opitons.output.imageName}${ImageService.getImageExtension(opitons.input.imagePath)}`;
+        const newFileName = `${options.output.imageName}${ImageService.getImageExtension(options.input.imagePath)}`;
 
-        const dirPath = path.join(opitons.output.dir, `drawable-${screenType}`);
+        const dirPath = path.join(options.output.dir, `drawable-${screenType}`);
         if (!fs.existsSync(dirPath)) {
             fs.mkdirSync(dirPath, {
                 recursive: true,
             });
         }
-        const nWidth = opitons.output.width === InputSize.auto ? undefined : opitons.output.width * getFactorForScreenType(screenType);
-        const nHeight = opitons.output.height === InputSize.auto ? undefined : opitons.output.height * getFactorForScreenType(screenType);
+        const nWidth = options.output.width === InputSize.auto ? undefined : options.output.width * getFactorForScreenType(screenType);
+        const nHeight = options.output.height === InputSize.auto ? undefined : options.output.height * getFactorForScreenType(screenType);
 
         Logger.info(`Resizing android image for screen type ${screenType} <${nWidth === undefined ? 'auto' : nWidth}X${nHeight === undefined ? 'auto' : nHeight}>`);
-        await sharp(opitons.input.imagePath)
+        await sharp(options.input.imagePath)
             .resize({
                 width: nWidth,
                 height: nHeight,
