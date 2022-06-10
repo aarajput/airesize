@@ -14,7 +14,8 @@ import {InputSize} from './enums/input-size';
 import {hideBin} from 'yargs/helpers';
 import {
     IGenerateAndroidAppIconOptions,
-    IGenerateAndroidImagesOptions
+    IGenerateAndroidImagesOptions,
+    IGenerateAndroidNotificationIcons
 } from './others/interfaces';
 
 export const enableLog = () => {
@@ -34,16 +35,13 @@ export const generateAndroidAppIcons = (options: IGenerateAndroidAppIconOptions)
     return AndroidImageResizer.generateAppIcons(options);
 };
 
-export const generateAndroidNotificationIcons = (input: {
-    imagePath: string,
-    outputDir: string,
-}): Promise<void> => {
+export const generateAndroidNotificationIcons = (input: IGenerateAndroidNotificationIcons): Promise<void> => {
     return AndroidImageResizer.generateNotificationIcons(input);
 };
 
 export const generateIOSImages = (input: {
-    width: number | 'auto',
-    height: number | 'auto',
+    width: number | InputSize.auto,
+    height: number | InputSize.auto,
     imagePath: string,
     outputDir: string,
 }): Promise<void> => {
@@ -177,8 +175,13 @@ const run = async () => {
     }
     if (argv.androidNotificationIcon) {
         await AndroidImageResizer.generateNotificationIcons({
-            imagePath,
-            outputDir: path.join(imageDir, imageNameNoExt, 'android-notification-icons'),
+            input: {
+                imagePath,
+            },
+            output: {
+                dir: path.join(imageDir, imageNameNoExt, 'android-notification-icons'),
+                imageName: 'ic_notification',
+            },
         });
     }
 

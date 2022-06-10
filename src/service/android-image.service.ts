@@ -12,7 +12,8 @@ import * as xmlbuilder from 'xmlbuilder';
 import {Constants} from '../others/constants';
 import {
     IGenerateAndroidAppIconOptions,
-    IGenerateAndroidImagesOptions
+    IGenerateAndroidImagesOptions,
+    IGenerateAndroidNotificationIcons
 } from '../others/interfaces';
 
 export const resizeImage = async (options: IGenerateAndroidImagesOptions) => {
@@ -150,12 +151,9 @@ export const generateAppIcons = async (options: IGenerateAndroidAppIconOptions)
     }));
 };
 
-export const generateNotificationIcons = async (input: Readonly<{
-    imagePath: string,
-    outputDir: string,
-}>): Promise<void> => {
+export const generateNotificationIcons = async (options: IGenerateAndroidNotificationIcons): Promise<void> => {
     const promises = XAndroidScreenType.values.map(async (value) => {
-        const dir = path.join(input.outputDir, `drawable-${value}`);
+        const dir = path.join(options.output.dir, `drawable-${value}`);
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, {
                 recursive: true,
@@ -170,7 +168,7 @@ export const generateNotificationIcons = async (input: Readonly<{
             }).toBuffer())
             .composite([
                 {
-                    input: await sharp(input.imagePath)
+                    input: await sharp(options.input.imagePath)
                         .resize({
                             width: Math.round(size * 0.9),
                             height: Math.round(size * 0.9),
@@ -179,7 +177,7 @@ export const generateNotificationIcons = async (input: Readonly<{
                         .toBuffer(),
                 }
             ])
-            .toFile(path.join(dir, 'ic_notification.png'));
+            .toFile(path.join(dir, `${options.output.imageName}.png`));
     });
     await Promise.all(promises);
 };

@@ -41,3 +41,13 @@ export interface IGenerateAndroidImagesOptions {
         imageName: string,
     },
 }
+
+export interface IGenerateAndroidNotificationIcons {
+    input: {
+        imagePath: string,
+    },
+    output: {
+        dir: string,
+        imageName: string,
+    },
+}
