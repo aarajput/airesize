@@ -9,6 +9,7 @@ import {appIconContents} from '../others/ios-app-icon-contents';
 import * as _ from 'lodash';
 import {iosImageContents} from '../others/ios-image-contents';
 import {IGenerateIOSAppIcons, IGenerateIOSImages} from '../others/interfaces';
+import {Constants} from '../others/constants';
 
 export const resizeImage = async (options: IGenerateIOSImages) => {
     const promises: Promise<void>[] = XIOSScreenType.values.map((screenType) => resizeImageForSpecificScreenType(options, screenType));
@@ -64,14 +65,37 @@ export const generateAppIcons = async (options: IGenerateIOSAppIcons): Promise<v
         const scale = +ic.scale.replace('x', '');
         const nSize = ic.size!.split('x');
         Logger.info(`Resizing ios app icon for ${ic.filename}`);
-        await sharp(options.input.iconPath)
-            .resize(
-                {
-                    width: +nSize[0] * scale,
-                    height: +nSize[1] * scale,
-                }
-            )
-            .toFile(path.join(options.output.dir, ic.filename))
+        const iWidth = +nSize[0] * scale;
+        const iHeight = +nSize[1] * scale;
+        if (options.input.iconColor) {
+            await sharp(await sharp(Buffer.from(Constants.getSolidSVG(options.input.iconColor)))
+                .resize({
+                    width: iWidth,
+                    height: iHeight,
+                })
+                .toBuffer())
+                .composite([
+                    {
+                        input: await sharp(options.input.iconPath)
+                            .resize({
+                                width: Math.round(iWidth * 0.9),
+                                height: Math.round(iHeight * 0.9),
+                                fit: 'inside',
+                            })
+                            .toBuffer(),
+                    },
+                ])
+                .toFile(path.join(options.output.dir, ic.filename));
+        } else {
+            await sharp(options.input.iconPath)
+                .resize(
+                    {
+                        width: iWidth,
+                        height: iHeight,
+                    }
+                )
+                .toFile(path.join(options.output.dir, ic.filename))
+        }
     });
     await Promise.all(promises);
     fs.writeFileSync(path.join(options.output.dir, 'Contents.json'), JSON.stringify(newContent, null, 2));
