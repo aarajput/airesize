@@ -35,7 +35,7 @@ const resizeImageForSpecificScreenType =
         const nWidth = opitons.output.width === InputSize.auto ? undefined : opitons.output.width * getFactorForScreenType(screenType);
         const nHeight = opitons.output.height === InputSize.auto ? undefined : opitons.output.height * getFactorForScreenType(screenType);
 
-        Logger.info(`Resizing android image for screen type ${screenType} <${nWidth === -1 ? 'auto' : nWidth}X${nHeight === -1 ? 'auto' : nHeight}>`);
+        Logger.info(`Resizing android image for screen type ${screenType} <${nWidth === undefined ? 'auto' : nWidth}X${nHeight === undefined ? 'auto' : nHeight}>`);
         await sharp(opitons.input.imagePath)
             .resize({
                 width: nWidth,
