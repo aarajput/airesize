@@ -15,7 +15,8 @@ import {hideBin} from 'yargs/helpers';
 import {
     IGenerateAndroidAppIconOptions,
     IGenerateAndroidImagesOptions,
-    IGenerateAndroidNotificationIcons
+    IGenerateAndroidNotificationIcons,
+    IGenerateIOSImages
 } from './others/interfaces';
 
 export const enableLog = () => {
@@ -35,22 +36,12 @@ export const generateAndroidAppIcons = (options: IGenerateAndroidAppIconOptions)
     return AndroidImageResizer.generateAppIcons(options);
 };
 
-export const generateAndroidNotificationIcons = (input: IGenerateAndroidNotificationIcons): Promise<void> => {
-    return AndroidImageResizer.generateNotificationIcons(input);
+export const generateAndroidNotificationIcons = (options: IGenerateAndroidNotificationIcons): Promise<void> => {
+    return AndroidImageResizer.generateNotificationIcons(options);
 };
 
-export const generateIOSImages = (input: {
-    width: number | InputSize.auto,
-    height: number | InputSize.auto,
-    imagePath: string,
-    outputDir: string,
-}): Promise<void> => {
-    return IOSImageResizer.resizeImage({
-        width: `${input.width}`,
-        height: `${input.height}`,
-        imagePath: input.imagePath,
-        outputDir: input.outputDir,
-    });
+export const generateIOSImages = (options: IGenerateIOSImages): Promise<void> => {
+    return IOSImageResizer.resizeImage(options);
 };
 
 export const generateIOSAppIcons = (input: {
@@ -61,8 +52,8 @@ export const generateIOSAppIcons = (input: {
 };
 
 const getSizeFromUser = async (): Promise<{
-    width: string;
-    height: string;
+    width: number | InputSize.auto;
+    height: number | InputSize.auto;
 }> => {
     const size = await prompt.get([
         {
@@ -88,8 +79,8 @@ const getSizeFromUser = async (): Promise<{
     InputValidator.validateSize('Height', height as string);
     InputValidator.validateWidthAndHeight(width, height);
     return {
-        width,
-        height,
+        width: width === InputSize.auto ? width : parseFloat(width),
+        height: height === InputSize.auto ? height : parseFloat(height),
     };
 }
 
@@ -151,8 +142,8 @@ const run = async () => {
                 imagePath,
             },
             output: {
-                width: width === InputSize.auto ? width : parseFloat(width),
-                height: height === InputSize.auto ? height : parseFloat(height),
+                width,
+                height,
                 dir: path.join(imageDir, imageNameNoExt, 'android'),
                 imageName: snakeCaseImageName,
             },
@@ -190,11 +181,18 @@ const run = async () => {
             width,
             height,
         } = await getSizeFromUser();
+        const imageNameWithoutExt = ImageService.getImageNameWithoutExtension(imagePath);
+        const pascalCaseImageName = changeCase.pascalCase(imageNameWithoutExt);
         await IOSImageResizer.resizeImage({
-            width,
-            height,
-            imagePath,
-            outputDir: path.join(imageDir, imageNameNoExt, 'ios'),
+            input: {
+                imagePath,
+            },
+            output: {
+                width,
+                height,
+                dir: path.join(imageDir, imageNameNoExt, 'ios'),
+                imageName: pascalCaseImageName,
+            },
         });
     }
     if (argv.iosAppIcon) {

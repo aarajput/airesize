@@ -2,59 +2,41 @@ import * as ImageService from './image.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import {IOSScreenType, XIOSScreenType} from '../enums/ios-screen-type';
-import * as changeCase from 'change-case';
 import * as sharp from 'sharp';
 import {InputSize} from '../enums/input-size';
 import * as Logger from '../utils/logger';
 import {appIconContents} from '../others/ios-app-icon-contents';
 import * as _ from 'lodash';
 import {iosImageContents} from '../others/ios-image-contents';
+import {IGenerateIOSImages} from '../others/interfaces';
 
-export const resizeImage = async (input: {
-    imagePath: string,
-    width: string,
-    height: string,
-    outputDir: string,
-}) => {
-    const imageNameWithoutExt = ImageService.getImageNameWithoutExtension(input.imagePath);
-    const newImageName = changeCase.pascalCase(imageNameWithoutExt);
-    const promises: Promise<void>[] = XIOSScreenType.values.map((screenType) => resizeImageForSpecificScreenType({
-        ...input,
-        screenType,
-        imageNameWithoutExtension: newImageName,
-    }));
+export const resizeImage = async (options: IGenerateIOSImages) => {
+    const promises: Promise<void>[] = XIOSScreenType.values.map((screenType) => resizeImageForSpecificScreenType(options, screenType));
     await Promise.all(promises);
     const newContent = _.cloneDeep(iosImageContents);
     newContent.images.forEach((img) => {
-        img.filename = img.filename.replace('[IMAGE_NAME]', newImageName);
+        img.filename = img.filename.replace('[IMAGE_NAME]', options.output.imageName);
     });
-    fs.writeFileSync(path.join(input.outputDir, 'Contents.json'), JSON.stringify(newContent, null, 2));
+    fs.writeFileSync(path.join(options.output.dir, 'Contents.json'), JSON.stringify(newContent, null, 2));
 };
 
-const resizeImageForSpecificScreenType = async (input: {
-    imagePath: string,
-    width: string,
-    height: string,
-    screenType: IOSScreenType,
-    outputDir: string,
-    imageNameWithoutExtension: string,
-}) => {
-    const newFileName = `${input.imageNameWithoutExtension}${input.screenType}${ImageService.getImageExtension(input.imagePath)}`;
-    if (!fs.existsSync(input.outputDir)) {
-        fs.mkdirSync(input.outputDir, {
+const resizeImageForSpecificScreenType = async (options: IGenerateIOSImages, screenType: IOSScreenType) => {
+    const newFileName = `${options.output.imageName}${screenType}${ImageService.getImageExtension(options.input.imagePath)}`;
+    if (!fs.existsSync(options.output.dir)) {
+        fs.mkdirSync(options.output.dir, {
             recursive: true,
         });
     }
-    const nWidth = input.width === InputSize.auto ? undefined : parseFloat(input.width) * getFactorForScreenType(input.screenType);
-    const nHeight = input.height === InputSize.auto ? undefined : parseFloat(input.height) * getFactorForScreenType(input.screenType);
+    const nWidth = options.output.width === InputSize.auto ? undefined : options.output.width * getFactorForScreenType(screenType);
+    const nHeight = options.output.height === InputSize.auto ? undefined : options.output.height * getFactorForScreenType(screenType);
 
-    Logger.info(`Resizing ios image for screen type ${input.screenType} <${nWidth === -1 ? 'auto' : nWidth}X${nHeight === -1 ? 'auto' : nHeight}>`);
-    await sharp(input.imagePath)
+    Logger.info(`Resizing ios image for screen type ${screenType} <${nWidth === undefined ? 'auto' : nWidth}X${nHeight === undefined ? 'auto' : nHeight}>`);
+    await sharp(options.input.imagePath)
         .resize({
             width: nWidth,
             height: nHeight,
         })
-        .toFile(path.join(input.outputDir, newFileName));
+        .toFile(path.join(options.output.dir, newFileName));
 };
 
 const getFactorForScreenType = (screenType: IOSScreenType): number => {

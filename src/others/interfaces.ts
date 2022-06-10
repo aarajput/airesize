@@ -51,3 +51,15 @@ export interface IGenerateAndroidNotificationIcons {
         imageName: string,
     },
 }
+
+export interface IGenerateIOSImages {
+    input: {
+        imagePath: string,
+    },
+    output: {
+        width: number | InputSize.auto,
+        height: number | InputSize.auto,
+        dir: string,
+        imageName: string,
+    },
+}
