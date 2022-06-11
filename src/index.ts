@@ -20,6 +20,8 @@ import {
     IGenerateIOSImages
 } from './others/interfaces';
 
+export {InputSize} from './enums/input-size';
+
 export const enableLog = () => {
     Logger.enableLog();
 };
