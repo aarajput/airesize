@@ -210,8 +210,10 @@ const run = async () => {
                 iconColor: backgroundIconColor,
             },
             output: {
-                dir: path.join(imageDir, imageNameWithoutExt, 'ios-app-icons'),
-                iconName: 'Icon-App',
+                dir: path.join(imageDir, imageNameWithoutExt, `${changeCase.pascalCase(imageNameWithoutExt)}.appiconset`),
+                iconName: changeCase.capitalCase(imageNameWithoutExt, {
+                    delimiter: '-',
+                }),
             },
         });
     }
