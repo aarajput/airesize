@@ -20,13 +20,15 @@ export interface IContentInfo {
 export interface IGenerateAndroidAppIconOptions {
     input: {
         foregroundIconPath: string,
-        backgroundIconColor: string,
+        backgroundIconColor?: string,
+        backgroundIconPath?: string,
     },
     output: {
         dir: string,
         foregroundIconName: string,
-        roundIconName: string,
-        colorFileName: string,
+        backgroundIconOrColorName: string,
+        mainIconName: string,
+        colorFileName?: string,
     },
 }
 

@@ -1,7 +1,4 @@
-import {
-    AndroidScreenType,
-    XAndroidScreenType
-} from '../enums/android-screen-type';
+import {AndroidScreenType, XAndroidScreenType} from '../enums/android-screen-type';
 import * as ImageService from './image.service';
 import * as Logger from '../utils/logger';
 import * as path from 'path';
@@ -62,6 +59,15 @@ const getFactorForScreenType = (screenType: AndroidScreenType): number => {
 
 export const generateAppIcons = async (options: IGenerateAndroidAppIconOptions)
     : Promise<void> => {
+    if (options.input.backgroundIconColor && options.input.backgroundIconPath) {
+        throw Error('You can not set both input.backgroundIconColor and input.backgroundIconPath values.');
+    }
+    if (!options.input.backgroundIconColor && !options.input.backgroundIconPath) {
+        throw Error('You need to set either input.backgroundIconColor or input.backgroundIconPath values.');
+    }
+    if (options.input.backgroundIconColor && !options.output.colorFileName) {
+        throw Error('output.colorFileName is required if input.backgroundIconColor is passed');
+    }
     const promises = XAndroidScreenType.values.map(async (value) => {
         const dir = path.join(options.output.dir, `mipmap-${value}`);
         if (!fs.existsSync(dir)) {
@@ -94,11 +100,16 @@ export const generateAppIcons = async (options: IGenerateAndroidAppIconOptions)
             .resize(roundSize, roundSize)
             .toBuffer())
             .composite([
-                {
+                (options.input.backgroundIconColor ? {
                     input: await sharp(Buffer.from(Constants.getCircleSVG(options.input.backgroundIconColor)))
                         .resize(Math.round(roundSize * 0.9))
                         .toBuffer(),
-                },
+                } : null),
+                (options.input.backgroundIconPath ? {
+                    input: await sharp(Buffer.from(options.input.backgroundIconPath))
+                        .resize(Math.round(roundSize * 0.9))
+                        .toBuffer(),
+                } : null),
                 {
                     input: await sharp(options.input.foregroundIconPath)
                         .resize({
@@ -108,23 +119,24 @@ export const generateAppIcons = async (options: IGenerateAndroidAppIconOptions)
                         })
                         .toBuffer(),
                 },
-            ])
-            .toFile(path.join(dir, `${options.output.roundIconName}.png`));
+            ].filter((value) => value)
+                .map((value) => value!))
+            .toFile(path.join(dir, `${options.output.mainIconName}.png`));
     });
     await Promise.all(promises);
-    Logger.info(`Generating ${options.output.roundIconName}.xml`);
-    const icAppIconRoundXml = xmlbuilder.create({
+    Logger.info(`Generating ${options.output.mainIconName}.xml`);
+    const icAppIconXml = xmlbuilder.create({
         'adaptive-icon': {
             '@xmlns:android': 'http://schemas.android.com/apk/res/android',
         },
     }, {
         encoding: 'utf-8',
     });
-    icAppIconRoundXml.ele('background', {
-        'android:drawable': '@color/ic_app_icon_bg',
+    icAppIconXml.ele('background', {
+        'android:drawable': `@color/${options.output.backgroundIconOrColorName}`,
     });
-    icAppIconRoundXml.ele('foreground', {
-        'android:drawable': '@mipmap/ic_app_icon_fg',
+    icAppIconXml.ele('foreground', {
+        'android:drawable': `@mipmap/${options.output.foregroundIconName}`,
     });
     const mipMap26Dir = path.join(options.output.dir, 'mipmap-anydpi-v26');
     if (!fs.existsSync(mipMap26Dir)) {
@@ -132,7 +144,7 @@ export const generateAppIcons = async (options: IGenerateAndroidAppIconOptions)
             recursive: true,
         });
     }
-    fs.writeFileSync(path.join(mipMap26Dir, `${options.output.roundIconName}.xml`), icAppIconRoundXml.end({
+    fs.writeFileSync(path.join(mipMap26Dir, `${options.output.mainIconName}.xml`), icAppIconXml.end({
         pretty: true,
     }));
     const valuesDir = path.join(options.output.dir, 'values');
@@ -141,14 +153,16 @@ export const generateAppIcons = async (options: IGenerateAndroidAppIconOptions)
             recursive: true,
         });
     }
-    const icAppIconRoundColorXml = xmlbuilder.create('resources', {
-        encoding: 'utf-8',
-    }).ele('color', {
-        'name': 'ic_app_icon_bg',
-    }, `#${options.input.backgroundIconColor}`);
-    fs.writeFileSync(path.join(valuesDir, `${options.output.colorFileName}.xml`), icAppIconRoundColorXml.end({
-        pretty: true,
-    }));
+    if (options.input.backgroundIconColor) {
+        const icAppIconColorXml = xmlbuilder.create('resources', {
+            encoding: 'utf-8',
+        }).ele('color', {
+            'name': options.output.backgroundIconOrColorName,
+        }, `#${options.input.backgroundIconColor}`);
+        fs.writeFileSync(path.join(valuesDir, `${options.output.colorFileName}.xml`), icAppIconColorXml.end({
+            pretty: true,
+        }));
+    }
 };
 
 export const generateNotificationIcons = async (options: IGenerateAndroidNotificationIcons): Promise<void> => {

@@ -164,9 +164,10 @@ const run = async () => {
             },
             output: {
                 dir: path.join(imageDir, imageNameWithoutExt, 'android-app-icons'),
-                roundIconName: 'ic_app_icon_round',
+                mainIconName: 'ic_app_icon_round',
                 foregroundIconName: 'ic_app_icon_fg',
-                colorFileName: 'app_icon_colors'
+                colorFileName: 'app_icon_colors',
+                backgroundIconOrColorName: 'ic_app_icon_bg',
             },
         });
     }
