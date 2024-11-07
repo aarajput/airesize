@@ -22,7 +22,11 @@ export const resizeImage = async (options: IGenerateAndroidImagesOptions) => {
 const resizeImageForSpecificScreenType =
     async (options: IGenerateAndroidImagesOptions,
            screenType: AndroidScreenType) => {
-        const newFileName = `${options.output.imageName}${ImageService.getImageExtension(options.input.imagePath)}`;
+        let newFileExtension = ImageService.getImageExtension(options.input.imagePath);
+        if (newFileExtension === '.svg') {
+            newFileExtension = '.png';
+        }
+        const newFileName = `${options.output.imageName}${newFileExtension}`;
 
         const dirPath = path.join(options.output.dir, `drawable-${screenType}`);
         if (!fs.existsSync(dirPath)) {

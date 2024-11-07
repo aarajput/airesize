@@ -129,7 +129,7 @@ const run = async () => {
         })
         .argv;
     if (!argv.android && !argv.ios && !argv.iosAppIcon && !argv.androidAppIcon && !argv.androidNotificationIcon) {
-        throw new Error('Pass alteast one argument --android, --android-app-icon, --android-notification-icon, --ios or/and --ios-app-icon');
+        throw new Error('Pass at-least one argument --android, --android-app-icon, --android-notification-icon, --ios or/and --ios-app-icon');
     }
     const imagePath = _.head<any>(argv._);
     InputValidator.validateImagePath(imagePath);

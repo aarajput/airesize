@@ -22,7 +22,11 @@ export const resizeImage = async (options: IGenerateIOSImages) => {
 };
 
 const resizeImageForSpecificScreenType = async (options: IGenerateIOSImages, screenType: IOSScreenType) => {
-    const newFileName = `${options.output.imageName}${screenType}${ImageService.getImageExtension(options.input.imagePath)}`;
+    let newFileExtension = ImageService.getImageExtension(ImageService.getImageExtension(options.input.imagePath));
+    if (newFileExtension === '.svg') {
+        newFileExtension = '.png';
+    }
+    const newFileName = `${options.output.imageName}${screenType}${newFileExtension}`;
     if (!fs.existsSync(options.output.dir)) {
         fs.mkdirSync(options.output.dir, {
             recursive: true,
