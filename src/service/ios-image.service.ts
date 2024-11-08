@@ -22,7 +22,7 @@ export const resizeImage = async (options: IGenerateIOSImages) => {
 };
 
 const resizeImageForSpecificScreenType = async (options: IGenerateIOSImages, screenType: IOSScreenType) => {
-    let newFileExtension = ImageService.getImageExtension(ImageService.getImageExtension(options.input.imagePath));
+    let newFileExtension = ImageService.getImageExtension(options.input.imagePath);
     if (newFileExtension === '.svg') {
         newFileExtension = '.png';
     }
