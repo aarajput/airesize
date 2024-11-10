@@ -19,6 +19,8 @@ import {
     IGenerateIOSAppIcons,
     IGenerateIOSImages
 } from './others/interfaces';
+import {XAndroidScreenType} from './enums/android-screen-type';
+import {XIOSScreenType} from './enums/ios-screen-type';
 
 export {InputSize} from './enums/input-size';
 
@@ -114,22 +116,34 @@ const run = async () => {
         }).option('android', {
             alias: 'a',
             boolean: true,
+            description: `Generate android ${XAndroidScreenType.values.map((t) => `drawable-${t}`).join(', ')} according to given size`,
         }).option('android-app-icon', {
             alias: 'b',
             boolean: true,
+            description: `Generate android app icons`,
+        }).option('padding-factor', {
+            alias: 'p',
+            number: true,
+            description: 'Set padding factor of android/ios icon foreground. 0<padding-factor<=1. 0 means no padding. 0.5 means 50% padding.',
         }).option('android-notification-icon', {
             alias: 'c',
             boolean: true,
+            description: `Generate android notification icons`,
         }).option('ios', {
             alias: 'i',
             boolean: true,
+            description: `Generate ios ${XIOSScreenType.values.join(', ')} according to given size`,
         }).option('ios-app-icon', {
             alias: 'j',
             boolean: true,
+            description: `Generate ios app icons`,
         })
         .argv;
     if (!argv.android && !argv.ios && !argv.iosAppIcon && !argv.androidAppIcon && !argv.androidNotificationIcon) {
         throw new Error('Pass at-least one argument --android, --android-app-icon, --android-notification-icon, --ios or/and --ios-app-icon');
+    }
+    if (argv.paddingFactor && !argv.iosAppIcon && !argv.androidAppIcon) {
+        throw new Error('padding-factor is only used with --ios-app-icon or android-app-icon');
     }
     const imagePath = _.head<any>(argv._);
     InputValidator.validateImagePath(imagePath);
@@ -160,6 +174,7 @@ const run = async () => {
         await AndroidImageResizer.generateAppIcons({
             input: {
                 foregroundIconPath: imagePath,
+                foregroundIconPaddingFactor: argv.paddingFactor,
                 backgroundIconColor: backgroundIconColor!,
             },
             output: {
@@ -205,10 +220,14 @@ const run = async () => {
         const backgroundIconColor = await getAppIconBgColorFromUser({
             optional: true,
         });
+        if (!backgroundIconColor && argv.paddingFactor) {
+            throw new Error('padding-factor is only used when icon background is passed');
+        }
         await IOSImageResizer.generateAppIcons({
             input: {
                 iconPath: imagePath,
                 iconColor: backgroundIconColor,
+                iconPaddingFactor: argv.paddingFactor,
             },
             output: {
                 dir: path.join(imageDir, imageNameWithoutExt, `${changeCase.pascalCase(imageNameWithoutExt)}.appiconset`),

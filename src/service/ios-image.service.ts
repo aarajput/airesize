@@ -72,6 +72,7 @@ export const generateAppIcons = async (options: IGenerateIOSAppIcons): Promise<v
         const iWidth = +nSize[0] * scale;
         const iHeight = +nSize[1] * scale;
         if (options.input.iconColor) {
+            const paddingFactorInverse = 1 - (options.input.iconPaddingFactor ?? 0);
             await sharp(await sharp(Buffer.from(Constants.getSolidSVG(options.input.iconColor)))
                 .resize({
                     width: iWidth,
@@ -82,8 +83,8 @@ export const generateAppIcons = async (options: IGenerateIOSAppIcons): Promise<v
                     {
                         input: await sharp(options.input.iconPath)
                             .resize({
-                                width: Math.round(iWidth * 0.9),
-                                height: Math.round(iHeight * 0.9),
+                                width: Math.round(iWidth * paddingFactorInverse),
+                                height: Math.round(iHeight * paddingFactorInverse),
                                 fit: 'inside',
                             })
                             .toBuffer(),

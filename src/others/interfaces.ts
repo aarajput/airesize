@@ -20,6 +20,7 @@ export interface IContentInfo {
 export interface IGenerateAndroidAppIconOptions {
     input: {
         foregroundIconPath: string,
+        foregroundIconPaddingFactor?: number,
         backgroundIconColor?: string,
         backgroundIconPath?: string,
     },
@@ -70,6 +71,7 @@ export interface IGenerateIOSAppIcons {
     input: {
         iconPath: string,
         iconColor?: string,
+        iconPaddingFactor?: number,
     },
     output: {
         dir: string,

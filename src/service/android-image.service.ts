@@ -72,6 +72,9 @@ export const generateAppIcons = async (options: IGenerateAndroidAppIconOptions)
     if (options.input.backgroundIconColor && !options.output.colorFileName) {
         throw Error('output.colorFileName is required if input.backgroundIconColor is passed');
     }
+    if (options.input.foregroundIconPaddingFactor && (options.input.foregroundIconPaddingFactor < 0 || options.input.foregroundIconPaddingFactor >= 1)) {
+        throw Error('options.input.foregroundIconResizeFactor should be 0<=foregroundIconPadding<1');
+    }
     const promises = XAndroidScreenType.values.map(async (value) => {
         const dir = path.join(options.output.dir, `mipmap-${value}`);
         if (!fs.existsSync(dir)) {
@@ -82,7 +85,9 @@ export const generateAppIcons = async (options: IGenerateAndroidAppIconOptions)
         Logger.info(`Resizing android app icon for mipmap-${value}`);
 
         const fgSize = 108 * getFactorForScreenType(value);
-        const resizeFactor = 0.60;
+        const paddingFactorInverse = 1 - (options.input.foregroundIconPaddingFactor ?? 0);
+        const resizeFactorV26 = 0.48 * paddingFactorInverse;
+        const resizeFactor = 0.64 * paddingFactorInverse;
         await sharp(await sharp(Buffer.from(Constants.TRANSPARENT_SVG))
             .resize(fgSize, fgSize)
             .toBuffer())
@@ -90,8 +95,7 @@ export const generateAppIcons = async (options: IGenerateAndroidAppIconOptions)
                 {
                     input: await sharp(options.input.foregroundIconPath)
                         .resize({
-                            width: Math.round(fgSize * resizeFactor),
-                            height: Math.round(fgSize * resizeFactor),
+                            width: Math.round(fgSize * resizeFactorV26),
                             fit: 'inside',
                         })
                         .toBuffer(),
